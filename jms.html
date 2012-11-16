@@ -1,0 +1,98 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="utf-8">
+    <title>JMS</title>
+</head>
+<body>
+
+<textarea name="" id="a" cols="90" rows="16">
+
+    #each
+    <UL>
+        #var a=new Date()
+        #if (foo)
+        <li>#{!name}</li>
+        #elseif(foo=="hello world")
+
+        #elseif(foo=123)
+
+        #switch(name)
+        #case "123"
+
+        #break
+        #case
+        #break
+        #case
+        #break
+        #endswitch
+
+        <li class="none">$name</li>
+        #else
+        <li class="none">#{a.toLocalString()}</li>
+        #endif
+    </UL>
+    #end
+</textarea>
+
+
+<pre id="b">
+
+</pre>
+<script type="text/javascript">
+    var a = document.getElementById('a');
+    var b = document.getElementById('b');
+
+    //var arr = a.value.match(/[^\\]?#[a-z]+[^#\r\n]*/gmi);
+    var arr = a.value.split(/[\r\n]/gmi);
+    var exec = [];
+    arr.forEach(function (item, index) {
+        //匹配
+        var _item = item.match(/[^\\]?#([a-z]+)([^#\r\n]*)/);
+        if (_item) {
+            switch (RegExp.$1) {
+                case "each":
+                    exec.push('var html=[];');
+                    exec.push('json888.forEach(function(item,index,arr){');
+                    break;
+                case "if":
+                    exec.push('if' + RegExp.$2 + '{');
+                    break;
+                case "elseif":
+                    exec.push('}else if' + RegExp.$2 + '{');
+                    break;
+                case "else":
+                    exec.push('}else{');
+                    break;
+                case "endif":
+                    exec.push('}');
+                    break;
+                case "end":
+                    exec.push('});');
+                    break;
+
+                case "switch":
+                    exec.push('switch' + RegExp.$2 + '{');
+                    break;
+
+                case "case":
+                    exec.push('case "' + RegExp.$2 + '":');
+                    break;
+
+                case "break":
+                    exec.push('break;');
+                    break;
+
+                case "endswitch":
+                    exec.push('}');
+                    break;
+            }
+        } else {
+           if(item) exec.push('html.push(\'' + item + '\');');
+        }
+    });
+    console.log(exec.join('\r\n'));
+
+</script>
+</body>
+</html>
