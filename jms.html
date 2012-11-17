@@ -6,25 +6,50 @@
 </head>
 <body>
 
-<textarea name="" id="a" cols="90" rows="16">
-    \#112312312312#each #{!html.toLocalString()}
-    <UL>
-        # if (parseInt(foo,10) > 0 )
-        # var abc=123
-        <li>#{!name}</li>
-        # else if ( foo == "hello world")
-        <li>#{!else}</li>
-        #elseif (foo=123)
-        <li class="none">$name</li>
-        #else
-        <li class="none">#{a.toLocalString()}</li>
-        #endif
-        #script
-        var a=123;
-        function hello(){
+#每一行都由#号开始，只能包含JS
+\#function ==> #function
+#else if ==>elseif
+#end if ==> }
 
-        }
+##注释
+
+##解决原版script的问题
+#{
+var a=new Date();
+var c=hello;
+echo("hello world");
+if($!item indexOf()>0){
+echo "
+<li>hello world</li>
+";
+}
+#}
+
+<textarea name="" id="a" cols="90" rows="16">
+    ##注释代码不可靠呢
+    ##\#不应该出现
+    #each
+    <UL>
+
+
+        ## if (true)
+        ## var abc=123
+        <li>#{ name+":"+name.length}</li>
+        ## elseif ( msg == "hello world")
+        <li>#{ age }</li>
+        ##elseif (foo=123)
+        <li class="none">$abc</li>
+        ##else
+        ##<li class="none">#{name.length}</li>
+        ##endif
+        ##var a=123;
+        ##function hello(){
+
+        ##}
+
+
     </UL>
+
     #end
 
 </textarea>
@@ -36,25 +61,74 @@
 <script type="text/javascript">
     var a = document.getElementById('a');
     var b = document.getElementById('b');
+    var encode = encodeURIComponent;
 
     //var arr = a.value.match(/[^\\]?#[a-z]+[^#\r\n]*/gmi);
-    var arr = a.value.split(/[\r\n]/gmi);
+    var htmlTpl = a.value.split(/$/gmi);
+
+    var literal = /([\s\S]*)#\{([^\}]*)\}([\s\S]*)/;
+
+    var html = [];
     var exec = [];
 
-    arr.forEach(function (item, index) {
-        //匹配IF
+    function echo(str) {
 
-        if (/^[\s]*##/i.test(item)) {
-            return;
+        if (literal.test(str)) {
+            console.log('Can split', RegExp.$1, RegExp.$2, RegExp.$3);
+            exec.push("html.push('"+encode(RegExp.$1) + '\'+(function(){ return  ' + RegExp.$2 + '   })()+\'' + encode(RegExp.$3)+'\')');
+        } else {
+            exec.push("html.push('" + encodeURIComponent(str) + "')");
         }
-        if (/^[\s]*[\\]+#/i.test(item)) {
-            exec.push(item.replace(/^[\s]*[\\]+#/i, ''));
+    }
+
+    var jsondata = {
+        data:[
+            {
+                name:"熊松松",
+                age:23,
+                msg:"四川的人儿<b>啊啊啊啊</b>"
+            },
+            {
+                name:"胡锦涛",
+                age:66,
+                msg:"中华人民共和国的主席"
+            }
+        ]};
+
+
+    exec.push('var jsondata=');
+    exec.push('{"data":[{"name":"熊松松","age":23,"msg":"四川的人儿<b>啊啊啊啊</b>"},{"name":"胡锦涛","age":66,"msg":"中华人民共和国的主席"}]}');
+
+    var keyArr=Object.keys(jsondata.data[0]);
+
+    keyArr.forEach(function(key){
+        exec.push('var '+key+';');
+    });
+
+
+    htmlTpl.forEach(function (item, index) {
+        var comment = /^[\s]*##/;
+        var escape = /^[\s]*[\\]+[\s]*(#[\s\S]*)/;
+        //JMS注释
+        if (comment.test(item)) return;
+
+        //转义
+        if (escape.test(item)) {
+            exec.push(RegExp.$1);
+            return
         }
-        var _item = item.match(/#[\s]*(each|if|elseif|else if|endif|end)[\s]*(\([^#]*\))?/);
+
+        //优先替换script
+
+
+        var _item = item.match(/^[\s]*#[\s]*(each|if|elseif|else|endif|end)((.)*)$/);
         if (_item) {
             switch (RegExp.$1) {
                 case 'each':
-                    exec.push('json123.forEach(function(item,index,arr){');
+                    exec.push('jsondata.data.forEach(function(item,index,arr){');
+                    keyArr.forEach(function (key) {
+                        exec.push('var ' + key + '=encodeURIComponent(item["' + key + '"])');
+                    });
                     break;
                 case 'if':
                     exec.push(RegExp.$1 + RegExp.$2 + '{');
@@ -62,8 +136,8 @@
                 case 'elseif':
                     exec.push('}else if' + RegExp.$2 + '{');
                     break;
-                case 'else if':
-                    exec.push('}' + RegExp.$1 + RegExp.$2 + '{');
+                case 'else':
+                    exec.push('}else{');
                     break;
                 case 'endif':
                     exec.push('}');
@@ -73,10 +147,14 @@
                     break;
 
             }
+        } else {
+            echo(item);
         }
-
     });
-    console.log(exec.join('\r\n'));
+
+    exec.push('alert(decodeURIComponent(html.join("")))');
+    console.log(eval((exec.join('\r\n'))));
+
 
 
 </script>
