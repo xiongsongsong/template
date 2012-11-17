@@ -34,13 +34,19 @@ echo "
 
         ## if (true)
         ## var abc=123
-        <li>#{ name+":"+name.length}</li>
+        <li class="index#{(index+1)}">姓名： #{ name} 姓名长度：#{decodeURIComponent(name).length}</li>
         ## elseif ( msg == "hello world")
-        <li>#{ age }</li>
+        ##
+        ##
+        <li><h2>当前时间#{(new Date).toLocaleTimeString()}</h2></li>
+        <li class="#{age}">#{ age }</li>
         ##elseif (foo=123)
         <li class="none">$abc</li>
         ##else
-        ##<li class="none">#{name.length}</li>
+        ##
+        ##
+        ##
+        <li class="none">#{name.length}</li>
         ##endif
         ##var a=123;
         ##function hello(){
@@ -66,18 +72,22 @@ echo "
     //var arr = a.value.match(/[^\\]?#[a-z]+[^#\r\n]*/gmi);
     var htmlTpl = a.value.split(/$/gmi);
 
-    var literal = /([\s\S]*)#\{([^\}]*)\}([\s\S]*)/;
+    var literal = /#\{([^\}]+)\}/gmi;
 
     var html = [];
-    var exec = [];
+    var template = [];
 
     function echo(str) {
+        var literalResult = str.match(literal);
+        if (literalResult) {
+            literalResult.forEach(function (r) {
+                template.push("html.push('" + encodeURIComponent(str.substring(0, str.indexOf(r))) + "')");
+                template.push("html.push((function(){ return " + r.match(/{([^}]+)\}/)[1] + "  })( ))");
+                str = str.substring(str.indexOf(r) + r.length);
+            });
 
-        if (literal.test(str)) {
-            console.log('Can split', RegExp.$1, RegExp.$2, RegExp.$3);
-            exec.push("html.push('"+encode(RegExp.$1) + '\'+(function(){ return  ' + RegExp.$2 + '   })()+\'' + encode(RegExp.$3)+'\')');
         } else {
-            exec.push("html.push('" + encodeURIComponent(str) + "')");
+            template.push("html.push('" + encodeURIComponent(str) + "')");
         }
     }
 
@@ -96,15 +106,14 @@ echo "
         ]};
 
 
-    exec.push('var jsondata=');
-    exec.push('{"data":[{"name":"熊松松","age":23,"msg":"四川的人儿<b>啊啊啊啊</b>"},{"name":"胡锦涛","age":66,"msg":"中华人民共和国的主席"}]}');
+    template.push('var jsondata=');
+    template.push('{"data":[{"name":"熊松松","age":23,"msg":"四川的人儿<b>啊啊啊啊</b>"},{"name":"胡锦涛","age":66,"msg":"中华人民共和国的主席"}]}');
 
-    var keyArr=Object.keys(jsondata.data[0]);
+    var keyArr = Object.keys(jsondata.data[0]);
 
-    keyArr.forEach(function(key){
-        exec.push('var '+key+';');
+    keyArr.forEach(function (key) {
+        template.push('var ' + key + ';');
     });
-
 
     htmlTpl.forEach(function (item, index) {
         var comment = /^[\s]*##/;
@@ -114,7 +123,7 @@ echo "
 
         //转义
         if (escape.test(item)) {
-            exec.push(RegExp.$1);
+            template.push(RegExp.$1);
             return
         }
 
@@ -125,25 +134,25 @@ echo "
         if (_item) {
             switch (RegExp.$1) {
                 case 'each':
-                    exec.push('jsondata.data.forEach(function(item,index,arr){');
+                    template.push('jsondata.data.forEach(function(item,index,arr){');
                     keyArr.forEach(function (key) {
-                        exec.push('var ' + key + '=encodeURIComponent(item["' + key + '"])');
+                        template.push('var ' + key + '=encodeURIComponent(item["' + key + '"])');
                     });
                     break;
                 case 'if':
-                    exec.push(RegExp.$1 + RegExp.$2 + '{');
+                    template.push(RegExp.$1 + RegExp.$2 + '{');
                     break;
                 case 'elseif':
-                    exec.push('}else if' + RegExp.$2 + '{');
+                    template.push('}else if' + RegExp.$2 + '{');
                     break;
                 case 'else':
-                    exec.push('}else{');
+                    template.push('}else{');
                     break;
                 case 'endif':
-                    exec.push('}');
+                    template.push('}');
                     break;
                 case 'end':
-                    exec.push('})');
+                    template.push('})');
                     break;
 
             }
@@ -152,9 +161,8 @@ echo "
         }
     });
 
-    exec.push('alert(decodeURIComponent(html.join("")))');
-    console.log(eval((exec.join('\r\n'))));
-
+    template.push('alert(decodeURIComponent(html.join("")))');
+    eval(template.join('\r\n'));
 
 
 </script>
