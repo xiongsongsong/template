@@ -7,32 +7,26 @@
 <body>
 
 <textarea name="" id="a" cols="90" rows="16">
-
-    #each
+    \#112312312312#each #{!html.toLocalString()}
     <UL>
-        #var a=new Date()
-        #if (foo)
+        # if (parseInt(foo,10) > 0 )
+        # var abc=123
         <li>#{!name}</li>
-        #elseif(foo=="hello world")
-
-        #elseif(foo=123)
-
-        #switch(name)
-        #case "123"
-
-        #break
-        #case
-        #break
-        #case
-        #break
-        #endswitch
-
+        # else if ( foo == "hello world")
+        <li>#{!else}</li>
+        #elseif (foo=123)
         <li class="none">$name</li>
         #else
         <li class="none">#{a.toLocalString()}</li>
         #endif
+        #script
+        var a=123;
+        function hello(){
+
+        }
     </UL>
     #end
+
 </textarea>
 
 
@@ -46,52 +40,44 @@
     //var arr = a.value.match(/[^\\]?#[a-z]+[^#\r\n]*/gmi);
     var arr = a.value.split(/[\r\n]/gmi);
     var exec = [];
+
     arr.forEach(function (item, index) {
-        //匹配
-        var _item = item.match(/[^\\]?#([a-z]+)([^#\r\n]*)/);
+        //匹配IF
+
+        if (/^[\s]*##/i.test(item)) {
+            return;
+        }
+        if (/^[\s]*[\\]+#/i.test(item)) {
+            exec.push(item.replace(/^[\s]*[\\]+#/i, ''));
+        }
+        var _item = item.match(/#[\s]*(each|if|elseif|else if|endif|end)[\s]*(\([^#]*\))?/);
         if (_item) {
             switch (RegExp.$1) {
-                case "each":
-                    exec.push('var html=[];');
-                    exec.push('json888.forEach(function(item,index,arr){');
+                case 'each':
+                    exec.push('json123.forEach(function(item,index,arr){');
                     break;
-                case "if":
-                    exec.push('if' + RegExp.$2 + '{');
+                case 'if':
+                    exec.push(RegExp.$1 + RegExp.$2 + '{');
                     break;
-                case "elseif":
+                case 'elseif':
                     exec.push('}else if' + RegExp.$2 + '{');
                     break;
-                case "else":
-                    exec.push('}else{');
+                case 'else if':
+                    exec.push('}' + RegExp.$1 + RegExp.$2 + '{');
                     break;
-                case "endif":
+                case 'endif':
                     exec.push('}');
                     break;
-                case "end":
-                    exec.push('});');
+                case 'end':
+                    exec.push('})');
                     break;
 
-                case "switch":
-                    exec.push('switch' + RegExp.$2 + '{');
-                    break;
-
-                case "case":
-                    exec.push('case "' + RegExp.$2 + '":');
-                    break;
-
-                case "break":
-                    exec.push('break;');
-                    break;
-
-                case "endswitch":
-                    exec.push('}');
-                    break;
             }
-        } else {
-           if(item) exec.push('html.push(\'' + item + '\');');
         }
+
     });
     console.log(exec.join('\r\n'));
+
 
 </script>
 </body>
