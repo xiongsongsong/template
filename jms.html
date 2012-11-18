@@ -53,6 +53,12 @@ echo "
 
         ##}
 
+        <li>#{ first ? '第一个' : '' }</li>
+        <li>#{ odd ? '偶竖行' : '' }</li>
+        <li>#{ last ? '最后一个':"" }</li>
+        <script type="text/javascript">
+            var a = "#{name}"
+        </script>
 
     </UL>
 
@@ -80,10 +86,13 @@ echo "
     function echo(str) {
         var literalResult = str.match(literal);
         if (literalResult) {
-            literalResult.forEach(function (r) {
+            literalResult.forEach(function (r, index) {
                 template.push("html.push('" + encodeURIComponent(str.substring(0, str.indexOf(r))) + "')");
                 template.push("html.push((function(){ return " + r.match(/{([^}]+)\}/)[1] + "  })( ))");
                 str = str.substring(str.indexOf(r) + r.length);
+                if (index == literalResult.length - 1 && str.length > 0) {
+                    template.push("html.push('" + encodeURIComponent(str) + "')")
+                }
             });
 
         } else {
@@ -102,12 +111,23 @@ echo "
                 name:"李四",
                 age:66,
                 msg:"敏感词"
+            },
+            {
+                name:"李四",
+                age:66,
+                msg:"敏感词"
+            },
+
+            {
+                name:"李四",
+                age:66,
+                msg:"敏感词"
             }
         ]};
 
 
     template.push('var jsondata=');
-    template.push('{"data":[{"name":"熊松松","age":23,"msg":"四川的人儿<b>啊啊啊啊</b>"},{"name":"胡锦涛","age":66,"msg":"中华人民共和国的主席"}]}');
+    template.push('' + JSON.stringify(jsondata) + '');
 
     var keyArr = Object.keys(jsondata.data[0]);
 
@@ -138,6 +158,11 @@ echo "
                     keyArr.forEach(function (key) {
                         template.push('var ' + key + '=encodeURIComponent(item["' + key + '"])');
                     });
+                    //魔术变量
+                    template.push('var first =  (index == 0)');
+                    template.push('var last = (index == arr.length - 1)');
+                    template.push('var odd = (index % 2 == 0)');
+
                     break;
                 case 'if':
                     template.push(RegExp.$1 + RegExp.$2 + '{');
