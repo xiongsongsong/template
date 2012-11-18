@@ -28,17 +28,17 @@ echo "
 <textarea name="" id="a" cols="90" rows="16">
     <UL>
         #each
-        #{name} #{age} #{abc}
+#{name} 年龄：11\\\###  #{age}岁33 体重：#{abc} 第二此年龄：#{age}！还有吗？
         # if (first)
         <li>第一个</li>
-            #elseif(odd)
-            <li>偶竖行</li>
-            #elseif(!odd)
-            <li>奇数行</li>
-            #endif
-            #if(last)
-            <li>最后一个</li>
-            #endif
+        #elseif(odd)
+        <li>偶竖行</li>
+        #elseif(!odd)
+        <li>奇数行</li>
+        #endif
+        #if(last)
+        <li>最后一个</li>
+        #endif
         #end
     </UL>
 </textarea>
@@ -55,7 +55,7 @@ echo "
     //var arr = a.value.match(/[^\\]?#[a-z]+[^#\r\n]*/gmi);
     var htmlTpl = a.value.split(/$/gmi);
 
-    var literal = /#\{([^\}]+)\}/gmi;
+    var literal = /[\\]?#\{([^\}]+)\}/gmi;
 
     var html = [];
     var template = [];
@@ -67,13 +67,16 @@ echo "
                 template.push("html.push('" + encodeURIComponent(str.substring(0, str.indexOf(r))) + "')");
                 var variable = r.match(/{([^}]+)\}/)[1];
                 //假设用户对一个不存在的变量进行
-                template.push("html.push((function(){ return typeof (" + variable + ")!=='undefined' ? " + variable + ":''  })( ))");
+                if (r.indexOf('\\') > -1) {
+                    template.push("html.push('" + encodeURIComponent(r.substring(r.indexOf('\\')+1)) + "')");
+                } else {
+                    template.push("html.push((function(){ return typeof (" + variable + ")!=='undefined' ? " + variable + ":''  })( ))");
+                }
                 str = str.substring(str.indexOf(r) + r.length);
                 if (index == literalResult.length - 1 && str.length > 0) {
                     template.push("html.push('" + encodeURIComponent(str) + "')")
                 }
             });
-
         } else {
             template.push("html.push('" + encodeURIComponent(str) + "')");
         }
@@ -82,7 +85,7 @@ echo "
     var jsondata = {
         data:[
             {
-                name:"<b>123</b>",
+                name:"<b>王恺放</b>",
                 age:23,
                 msg:"四川的人儿<b>啊啊啊啊</b>"
             },
