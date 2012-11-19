@@ -3,12 +3,51 @@
 <head>
     <meta charset="utf-8">
     <title>JMS</title>
+    <script type="text/javascript" src="jquery.1.8.2.js"></script>
 </head>
 <body>
+<textarea id="text" cols="90" rows="20">
+    <cms:text hello="world" group="123">
+        <ul>
+            <li>#{text}</li>
+        </ul>
+    </cms:text>
+</textarea>
+
+
+<script type="text/javascript">
+
+    function getCMSTag() {
+        var tag = $('#text').val().match(/<(cms:[^\s]+)(.*)*(group="[^"]+")/gmi);
+        console.log(RegExp.$1, RegExp.$2, RegExp.$3)
+    }
+    getCMSTag();
+
+
+    if (true > -1) {
+        alert(false)
+        if (false < 2) {
+            alert(123)
+        }
+    }
+
+
+
+
+
+
+</script>
+
+#if(true)
+#if(false)
+#end
+#end
+
+<!--TODO:行内.属性获值不正确的问题，例如.length-->
 <textarea name="" id="a" cols="90" rows="16">
     <UL>
-        #each
-#{name} 年龄：11\\\###  #{age}岁33 体重：#{abc} 第二此年龄：#{age}！还有吗？
+        #each #end
+        #{name} 年龄：11\\\### #{age}岁33 体重：#{abc} 第二此年龄：#{age}！还有吗？
         # if (first)
         <li>第一个</li>
         #elseif(odd)
@@ -48,7 +87,7 @@
                 var variable = r.match(/{([^}]+)\}/)[1];
                 //假设用户对一个不存在的变量进行
                 if (r.indexOf('\\') > -1) {
-                    template.push("html.push('" + encodeURIComponent(r.substring(r.indexOf('\\')+1)) + "')");
+                    template.push("html.push('" + encodeURIComponent(r.substring(r.indexOf('\\') + 1)) + "')");
                 } else {
                     template.push("html.push((function(){ return typeof (" + variable + ")!=='undefined' ? " + variable + ":''  })( ))");
                 }
@@ -148,7 +187,7 @@
     });
 
     template.push('alert(decodeURIComponent(html.join("")))');
-    eval(template.join('\r'));
+    // eval(template.join('\r'));
 
 </script>
 </body>

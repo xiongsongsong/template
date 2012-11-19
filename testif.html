@@ -1,0 +1,45 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="utf-8">
+    <title></title>
+</head>
+<body>
+<pre type="text/tcp" name="" id="test" cols="30" rows="10">
+    //#[\s]*(if)[\s]*(\([^)]*\))([^#][^e][^a][^c]+)(#end)
+    #if   (true)
+        #if(AA.length)
+            #{name}
+                 #if(BB.length)
+                    #{name}
+                #end
+                #if(CCC.length)
+                    #{name}
+                #end
+        #end
+    #end
+    #if (false)
+        #each
+            #if(first)
+                aa12313
+            #end
+        #end
+    #end
+</pre>
+<script>
+    //从最小的已卫语句开始进行匹配
+    var value = document.getElementById('test').innerHTML;
+    var variable = false;
+    var IF = /#[\s]*(if|each)[\s]*(\([^)]*\))?[\s\S]*?((?!#each|#if))*?[\s\S]/gmi;
+
+    function translateIF(value) {
+        var c = value.match(IF);
+        c.forEach(function (a) {
+            console.log(a)
+        })
+    }
+
+    translateIF(value);
+</script>
+</body>
+</html>
