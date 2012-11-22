@@ -1,0 +1,124 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="utf-8">
+    <title>Analysis label pairing</title>
+    <style type="text/css">
+        body {
+            margin: 0;
+            padding: 0;
+            height: 100%;
+        }
+
+        pre, textarea {
+            display: inline-block;
+            width: 45%;
+            vertical-align: top;
+            height: 500px;
+            border: solid 1px #aaa;
+            background: #000;
+            color:#fff;
+            padding: 1em;
+            margin:0;
+            font-family: Consolas, sans-serif;
+            font-size: 12px;
+        }
+    </style>
+</head>
+<body>
+<h1>Analysis label pairing</h1>
+<h2>Support #if|#each and #end</h2>
+
+<p></p>
+<textarea id="test" cols="60" rows="10">
+    #if hello #end
+    #if world \#end
+
+    #each(item in arr)
+    if(index>2)
+    true
+    #end
+    #end
+
+    #end #if \#end
+</textarea>
+<textarea id="b">
+
+</textarea>
+<script>
+    var value = document.getElementById('test').value;
+    var tempValue = value;
+
+    var IFANDEACH = /([\\]*#each|[\\]*#if)[\s]*(\([^#]*\))?/gmi;
+
+    //RegExp object does not support lookbehind
+    //so with the code below
+    function translateIF() {
+
+        var allIf = tempValue.match(IFANDEACH);
+
+        if (!allIf) {
+            document.getElementById('b').innerHTML = value;
+            return;
+        }
+        //query first #if
+        var point = tempValue.indexOf(allIf[0]);
+
+        //check for escape
+        var isEscape = tempValue.substring(point).indexOf('\\') === 0;
+
+        //as the starting point of the first interception string
+        tempValue = tempValue.substring(point + allIf[0].length);
+
+        if (isEscape) {
+            arguments.callee();
+            return;
+        }
+
+        //find the #end last place
+        var current = tempValue.match(/[\s\S]*?([^\\]#end){1}/);
+
+        //if you find the "#end"
+        if (current) {
+            //and  can not contain the "#if #each..."
+            var matchIF = current[0].match(IFANDEACH);
+            if ((!matchIF || (matchIF[0] && matchIF[0].indexOf('\\') === 0))) {
+                //if not found,it proved to be correct
+                var a = allIf[0].match(IFANDEACH);
+                var _a = '', _b = '';
+
+                //replaced the a full-width in order to avoid duplication find
+                if (RegExp.$1 === '#if') {
+                    _a = '＃ＩＦ';
+                    _b = '＃ＥＮＤＩＦ' + '\r\n'
+                } else if (RegExp.$1 == '#each') {
+                    _a = '＃ＥＡＣＨ';
+                    _b = '＃ＥＮＤＥＡＣＨ' + '\r\n'
+                }
+                value = value.replace(allIf[0] + current[0], _a + RegExp.$2 + '\r\n' +
+                        current[0].substring(0, current[0].lastIndexOf('#end')) + '\r\n' + _b);
+
+                //repeat find
+                tempValue = value;
+            }
+        }
+
+        arguments.callee();
+
+    }
+
+    translateIF();
+
+
+    document.getElementById('test').onkeydown = function () {
+        var self = this;
+        setTimeout(function () {
+            value = tempValue = self.value;
+            translateIF()
+        }, 0);
+    }
+
+
+</script>
+</body>
+</html>
