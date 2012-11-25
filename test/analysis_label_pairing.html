@@ -44,7 +44,7 @@
 </textarea>
 <script>
 
-    var IFANDEACH = /([\\]*#each|[\\]*#if)[\s]*(\([^#]*\))?/gmi;
+    var IFANDEACH = /([\\]*#each|[\\]*#if)([\s]*\([^#]+\))?/gmi;
 
     //RegExp object does not support lookbehind
     //so with the code below
@@ -56,7 +56,7 @@
             var allIf = tempValue.match(IFANDEACH);
 
             if (!allIf) {
-                document.getElementById('b').innerHTML = value;
+                document.getElementById('b').value = value;
                 return;
             }
             //query first #if
@@ -93,7 +93,6 @@
                         _a = '\r\n＃ＥＡＣＨ';
                         _b = '＃ＥＮＤＥＡＣＨ' + '\r\n'
                     }
-                    console.log(current[0])
                     value = value.replace(allIf[0] + current[0], _a + RegExp.$2 + '\r\n' +
                             current[0].substring(0, current[0].lastIndexOf('#end')) + '\r\n' + _b);
 
