@@ -14,9 +14,9 @@
             display: inline-block;
             width: 31%;
             vertical-align: top;
-            height: 500px;
+            height: 1200px;
             border: solid 1px #aaa;
-            background: #000;
+            background: #333;
             color: #fff;
             padding: 1em;
             margin: 0;
@@ -32,13 +32,24 @@
 
 <p></p>
 <textarea id="test" cols="60" rows="10">
-    #if(a>0) hahahah #elseif(a<0) yes #else no default #end
+    #if(a>0) hahahah #elseif(a<0) yes #elseif(2>0) yes2 #else no default #end
 
-
-    #if
+    #if(test>2)
     <li>hello world</li>
     #end
 
+    #each(customList)
+    <li>姓名：#{name} 年龄：#{age} 身高:#{height}</li>
+    #end
+
+    #var arr=[123,333,4444,5555]
+
+    #each(arr)
+    <li>#{ item + ':' + (index+1) }</li>
+    #end
+    //http://tms.taobao.com/page/com.taobao.cms.tag.model.ImageLink@2f083c94?spm=0.0.0.1.unGWBE
+
+    //暂时不支持遍历对象
 </textarea>
 <textarea id="b">
 
@@ -90,13 +101,13 @@
 
                     //replaced the a full-width in order to avoid duplication find
                     if (RegExp.$1 === '#if') {
-                        _a = '＃ＩＦ';
-                        _b = '＃ＥＮＤＩＦ'
+                        _a = '\r\n＃ＩＦ';
+                        _b = '\r\n＃ＥＮＤＩＦ\r\n'
                     } else if (RegExp.$1 == '#each') {
-                        _a = '＃ＥＡＣＨ';
-                        _b = '＃ＥＮＤＥＡＣＨ'
+                        _a = '\r\n＃ＥＡＣＨ';
+                        _b = '\r\n＃ＥＮＤＥＡＣＨ\r\n'
                     }
-                    var replaceStr = _a + RegExp.$2 + current[0].substring(0, current[0].lastIndexOf('#end')) + _b;
+                    var replaceStr = _a + RegExp.$2 + '\r\n' + current[0].substring(0, current[0].lastIndexOf('#end')) + _b;
                     if (RegExp.$1 === '#if') replaceStr = replaceElse(replaceStr);
                     //Find if  else  end
                     value = value.replace(allIf[0] + current[0], replaceStr);
@@ -113,8 +124,8 @@
         //替换#if #end之间的#else  #elseif
         function replaceElse(str) {
             str = str.replace(/\\#(elseif|else){1}/gm, 'AMSTEMPBLOCKS==$1==');
-            str = str.replace(/#(elseif)[\s]*(\([^)]+\)){1}/gm, '＃ＥＬＳＥＩＦ$2');
-            str = str.replace(/#else/gm, '＃ＥＬＳＥ');
+            str = str.replace(/#(elseif)[\s]*(\([^)]+\)){1}/gm, '\r\n＃ＥＬＳＥＩＦ$2\r\n');
+            str = str.replace(/#else/gm, '\r\n＃ＥＬＳＥ\r\n');
             //Revert TEMPBLOCK
             str = str.replace(/AMSTEMPBLOCKS==(.*)==/gm, '\\#$1');
             return str;
@@ -135,33 +146,50 @@
             //document.getElementById('b').value = translateIF(self.value);
             document.getElementById('b').value = translateIF(self.value);
             var c = document.getElementById('c');
-            var rule = /(＃ＩＦ[\s]*\([^)]\)|＃ＥＬＳＥＩＦ[\s]*\([^)]\)|＃ＥＬＳＥ|＃ＥＮＤＩＦ|＃ＥＡＣＨ|＃ＥＮＤＥＡＣＨ)/gm;
-            var cArr = document.getElementById('b').value.split(rule);
+            var bValue = document.getElementById('b').value;
             var html = [];
-            cArr.forEach(function (str) {
-                var isFork = /[\s]*(＃ＩＦ[\s]*\([^)]+\)|＃ＥＬＳＥＩＦ[\s]*\([^)]+\)){1}/gm;
-                console.log(str)
-                if (isFork.test(str)) {
+            var rule = /(＃ＩＦ|＃ＥＬＳＥ(?:ＩＦ)*|＃ＥＮＤＩＦ|＃ＥＡＣＨ|＃ＥＮＤＥＡＣＨ)[\s]*(?:\((.*)\))*/gm;
+            bValue.split(/[\r\n]/).forEach(function (str) {
+                if (rule.test(str)) {
                     console.log(RegExp.$1)
+                    switch (RegExp.$1) {
+                        case "＃ＩＦ":
+                            html.push('if (' + RegExp.$2 + '){');
+                            break;
+                        case "＃ＥＬＳＥＩＦ":
+                            html.push('}else if(' + RegExp.$2 + '){');
+                            break;
+                        case "＃ＥＬＳＥ":
+                            html.push('}else{');
+                            break;
+                        case "＃ＥＮＤＩＦ":
+                            html.push('}');
+                            break;
+                        case "＃ＥＡＣＨ":
+
+                            html.push(RegExp.$2 + '.forEach(function(item,index){');
+                            break;
+                        case "＃ＥＮＤＥＡＣＨ":
+                            html.push('})');
+                            break;
+                    }
                 } else {
-                    html.push(str);
+                    html.push('tpl.push("' + str + '");');
                 }
             });
+
             c.value = html.join('\r\n');
+
         }, 0);
     };
+
 
     window.onload = function () {
         setTimeout(function () {
             document.getElementById('b').value = document.getElementById('test').value;
         }, 0);
-    }
+    };
 
-    //translateIF(document.getElementById('test').value);
-
-    if (Math.random() > parseInt(123, 10)) {
-
-    }
 </script>
 </body>
 </html>
