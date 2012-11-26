@@ -13,7 +13,7 @@
         </ul>
     </cms:text>
 </textarea>
-
+<!--
 
 <script type="text/javascript">
 
@@ -36,7 +36,7 @@
 
 
 
-</script>
+</script>-->
 
 #if(true)
 #if(false)
@@ -46,19 +46,25 @@
 <!--TODO:行内.属性获值不正确的问题，例如.length-->
 <textarea name="" id="a" cols="90" rows="16">
     <UL>
-        #each #end
-        #{name} 年龄：11\\\### #{age}岁33 体重：#{abc} 第二此年龄：#{age}！还有吗？
-        # if (first)
-        <li>第一个</li>
-        #elseif(odd)
-        <li>偶竖行</li>
-        #elseif(!odd)
-        <li>奇数行</li>
-        #endif
-        #if(last)
-        <li>最后一个</li>
-        #endif
+
+        ＃ＩＦ(2>1)
+        hello
+        ＃ＥＮＤＩＦ
+
+
+        ＃ＥＡＣＨ
+
+        <li
+        ＃ＩＦ(age>=88)
+class="99"
+        ＃ＥＮＤＩＦ
+        #{name}</li>
+
+        ＃ＥＮＤＥＡＣＨ
+
         #end
+        #end #if \#end
+
     </UL>
 </textarea>
 
@@ -97,7 +103,7 @@
                 }
             });
         } else {
-            template.push("html.push('" + encodeURIComponent(str) + "')");
+            if (str.trim().length > 0) template.push("html.push('" + encodeURIComponent(str) + "')");
         }
     }
 
@@ -114,14 +120,14 @@
                 msg:"敏感词"
             },
             {
-                name:"李四",
-                age:66,
+                name:"王五",
+                age:88,
                 msg:"敏感词"
             },
 
             {
-                name:"李四",
-                age:66,
+                name:"六六",
+                age:99,
                 msg:"敏感词"
             }
         ]};
@@ -151,10 +157,10 @@
         //优先替换script
 
 
-        var _item = item.match(/^[\s]*#[\s]*(each|if|elseif|else|endif|end)((.)*)$/);
+        var _item = item.match(/^[\s]*(＃ＩＦ|＃ＥＡＣＨ|＃ＥＮＤＩＦ|＃ＥＮＤＥＡＣＨ)(.*)$/);
         if (_item) {
             switch (RegExp.$1) {
-                case 'each':
+                case '＃ＥＡＣＨ':
                     template.push('jsondata.data.forEach(function(item,index,arr){');
                     keyArr.forEach(function (key) {
                         template.push('var ' + key + '=encodeURIComponent(item["' + key + '"])');
@@ -163,21 +169,14 @@
                     template.push('var first =  (index == 0)');
                     template.push('var last = (index == arr.length - 1)');
                     template.push('var odd = (index % 2 == 0)');
-
                     break;
-                case 'if':
-                    template.push(RegExp.$1 + RegExp.$2 + '{');
+                case '＃ＩＦ':
+                    template.push('if' + RegExp.$2 + '{');
                     break;
-                case 'elseif':
-                    template.push('}else if' + RegExp.$2 + '{');
-                    break;
-                case 'else':
-                    template.push('}else{');
-                    break;
-                case 'endif':
+                case '＃ＥＮＤＩＦ':
                     template.push('}');
                     break;
-                case 'end':
+                case '＃ＥＮＤＥＡＣＨ':
                     template.push('})');
                     break;
             }
@@ -187,7 +186,7 @@
     });
 
     template.push('alert(decodeURIComponent(html.join("")))');
-    // eval(template.join('\r'));
+    eval(template.join('\r'));
 
 </script>
 </body>

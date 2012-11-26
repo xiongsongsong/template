@@ -12,7 +12,7 @@
 
         pre, textarea {
             display: inline-block;
-            width: 45%;
+            width: 31%;
             vertical-align: top;
             height: 500px;
             border: solid 1px #aaa;
@@ -32,31 +32,34 @@
 
 <p></p>
 <textarea id="test" cols="60" rows="10">
-    #if(123) hello #end
-    #each
-    <li>hello</li>
+    #if(a>0) hahahah #elseif(a<0) yes #else no default #end
+
+
+    #if
+    <li>hello world</li>
     #end
-    #end
-    #end #if \#end
+
 </textarea>
 <textarea id="b">
 
 </textarea>
+
+<textarea id="c">
+
+</textarea>
 <script>
 
-    var IFANDEACH = /([\\]*#each|[\\]*#if)([\s]*\([^#]*\))?/gm;
+    var IFANDEACH = /([\\]*#if|[\\]*#each)([\s]*\([^#]*\))?/gm;
 
     //RegExp object does not support lookbehind
     //so with the code below
     function translateIF(value) {
-
         var tempValue = value;
 
         function _translateIf() {
             var allIf = tempValue.match(IFANDEACH);
 
             if (!allIf) {
-                document.getElementById('b').value = value;
                 return;
             }
             //query first #if
@@ -87,15 +90,16 @@
 
                     //replaced the a full-width in order to avoid duplication find
                     if (RegExp.$1 === '#if') {
-                        _a = '\r\n＃ＩＦ';
-                        _b = '＃ＥＮＤＩＦ' + '\r\n'
+                        _a = '＃ＩＦ';
+                        _b = '＃ＥＮＤＩＦ'
                     } else if (RegExp.$1 == '#each') {
-                        _a = '\r\n＃ＥＡＣＨ';
-                        _b = '＃ＥＮＤＥＡＣＨ' + '\r\n'
+                        _a = '＃ＥＡＣＨ';
+                        _b = '＃ＥＮＤＥＡＣＨ'
                     }
-                    value = value.replace(allIf[0] + current[0], _a + RegExp.$2 + '\r\n' +
-                            current[0].substring(0, current[0].lastIndexOf('#end')) + '\r\n' + _b);
-
+                    var replaceStr = _a + RegExp.$2 + current[0].substring(0, current[0].lastIndexOf('#end')) + _b;
+                    if (RegExp.$1 === '#if') replaceStr = replaceElse(replaceStr);
+                    //Find if  else  end
+                    value = value.replace(allIf[0] + current[0], replaceStr);
                     //repeat find
                     tempValue = value;
                 }
@@ -104,20 +108,60 @@
             _translateIf();
         }
 
-        _translateIf();
-        return value;
+        var elseRule = /([\\]*#elseif|[\\]*#else[\s]){1}(\([^)]+\))*/gm;
 
+        //替换#if #end之间的#else  #elseif
+        function replaceElse(str) {
+            str = str.replace(/\\#(elseif|else){1}/gm, 'AMSTEMPBLOCKS==$1==');
+            str = str.replace(/#(elseif)[\s]*(\([^)]+\)){1}/gm, '＃ＥＬＳＥＩＦ$2');
+            str = str.replace(/#else/gm, '＃ＥＬＳＥ');
+            //Revert TEMPBLOCK
+            str = str.replace(/AMSTEMPBLOCKS==(.*)==/gm, '\\#$1');
+            return str;
+        }
+
+        _translateIf();
+
+        //接下来分析模板
+        //console.log(value.match(/(＃ＩＦ|＃ＥＮＤＩＦ|＃ＥＡＣＨ|＃ＥＮＤＥＡＣＨ)/).join(''));
+
+        return value;
     }
 
     document.getElementById('test').onkeydown = function () {
         var self = this;
         setTimeout(function () {
+            var value = self.value;
+            //document.getElementById('b').value = translateIF(self.value);
             document.getElementById('b').value = translateIF(self.value);
+            var c = document.getElementById('c');
+            var rule = /(＃ＩＦ[\s]*\([^)]\)|＃ＥＬＳＥＩＦ[\s]*\([^)]\)|＃ＥＬＳＥ|＃ＥＮＤＩＦ|＃ＥＡＣＨ|＃ＥＮＤＥＡＣＨ)/gm;
+            var cArr = document.getElementById('b').value.split(rule);
+            var html = [];
+            cArr.forEach(function (str) {
+                var isFork = /[\s]*(＃ＩＦ[\s]*\([^)]+\)|＃ＥＬＳＥＩＦ[\s]*\([^)]+\)){1}/gm;
+                console.log(str)
+                if (isFork.test(str)) {
+                    console.log(RegExp.$1)
+                } else {
+                    html.push(str);
+                }
+            });
+            c.value = html.join('\r\n');
         }, 0);
     };
 
-    translateIF(document.getElementById('test').value);
+    window.onload = function () {
+        setTimeout(function () {
+            document.getElementById('b').value = document.getElementById('test').value;
+        }, 0);
+    }
 
+    //translateIF(document.getElementById('test').value);
+
+    if (Math.random() > parseInt(123, 10)) {
+
+    }
 </script>
 </body>
 </html>
