@@ -32,7 +32,7 @@
 
 <p></p>
 <textarea id="test" cols="60" rows="10">
-    #if(a>0) hahahah #elseif(a<0) yes #elseif(2>0) yes2 #else no default @end
+    #if(a>0) hahahah #elseif(a<0) yes #elseif(2>0) yes2 #else no default #end
 
     #if(test>2)
     <li>hello world</li>
@@ -51,6 +51,8 @@
 
     //暂时不支持遍历对象
 </textarea>
+
+
 <textarea id="b">
 
 </textarea>
@@ -60,7 +62,11 @@
 </textarea>
 <script>
 
-    var IFANDEACH = /([\\]*#if|[\\]*#each)([\s]*\([^#]*\))?/gm;
+    var $item;
+
+    var $test;
+
+    var IFANDEACH = /([\\]*#if|[\\]*#each|[\\]*#js)([\s]*\([^#]*\))?/gm;
 
     //RegExp object does not support lookbehind
     //so with the code below
@@ -149,6 +155,14 @@
         return value;
     }
 
+    //寻找变量值
+    function transportOperation(value) {
+
+        var re = /(＃ＩＦ|＃ＥＬＳＥＩＦ|＃ＥＡＣＨ)(.+)(＃ＥＮＤＩＦ|＃ＥＬＳＥＩＦ|＃ＥＮＤＥＡＣＨ)/gm;
+
+        return value;
+    }
+
     document.getElementById('test').onkeydown = function () {
         var self = this;
         setTimeout(function () {
@@ -158,6 +172,12 @@
             var c = document.getElementById('c');
             var bValue = document.getElementById('b').value;
             var html = [];
+
+            //捕获#IF  #EACH后方的变量，并判断正确性
+
+            bValue = transportOperation(bValue);
+
+            //开始转换为JS
             var rule = /(＃ＩＦ|＃ＥＬＳＥ(?:ＩＦ)*|＃ＥＮＤＩＦ|＃ＥＡＣＨ|＃ＥＮＤＥＡＣＨ)[\s]*(?:\((.*)\))*/gm;
             bValue.split(/[\r\n]/).forEach(function (str) {
                 if (rule.test(str)) {
