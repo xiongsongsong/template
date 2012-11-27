@@ -158,7 +158,22 @@
     //寻找变量值
     function transportOperation(value) {
 
-        var re = /(＃ＩＦ|＃ＥＬＳＥＩＦ|＃ＥＡＣＨ)(.+)(＃ＥＮＤＩＦ|＃ＥＬＳＥＩＦ|＃ＥＮＤＥＡＣＨ)/gm;
+
+        var re = /(＃ＩＦ|＃ＥＬＳＥＩＦ){1}(.*?)(?=＃ＥＬＳＥＩＦ|＃ＥＬＳＥ|＃ＥＮＤＩＦ|[\r\n])/gm;
+
+        value = value.replace(re, '$1AmsOperationStart--$2--AMSOperationEnd')
+
+        //开始逐一判断参数合法性
+
+
+        var operation = value.match(/AmsOperationStart--(.*?)--AMSOperationEnd/gm);
+        //首先靠猜测
+        console.log(operation)
+        if (operation) {
+            var $1 = RegExp.$1;
+            console.log($1);
+        }
+        var i = 0;
 
         return value;
     }
@@ -176,7 +191,8 @@
             //捕获#IF  #EACH后方的变量，并判断正确性
 
             bValue = transportOperation(bValue);
-
+            c.value = bValue;
+            return;
             //开始转换为JS
             var rule = /(＃ＩＦ|＃ＥＬＳＥ(?:ＩＦ)*|＃ＥＮＤＩＦ|＃ＥＡＣＨ|＃ＥＮＤＥＡＣＨ)[\s]*(?:\((.*)\))*/gm;
             bValue.split(/[\r\n]/).forEach(function (str) {
