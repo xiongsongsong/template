@@ -3,6 +3,7 @@
 <head>
     <meta charset="utf-8">
     <title>Analysis label pairing</title>
+    <script type="text/javascript" src="/jshint.js"></script>
     <style type="text/css">
         body {
             margin: 0;
@@ -26,9 +27,10 @@
     </style>
 </head>
 <body>
+
 <h1>Analysis label pairing</h1>
 
-<h2>Support #if|#each and #end</h2>
+<h2>Support #if|#each and #end todo:\#if在模板分析后，不应该将转义符暴露出来</h2>
 
 <p></p>
 <textarea id="test" cols="60" rows="10">
@@ -50,6 +52,15 @@
     //http://tms.taobao.com/page/com.taobao.cms.tag.model.ImageLink@2f083c94?spm=0.0.0.1.unGWBE
 
     //暂时不支持遍历对象
+
+
+    #js
+
+    var str=123;
+
+    var str="adf\#end"
+    #end
+
 </textarea>
 
 
@@ -161,17 +172,31 @@
 
         var re = /(＃ＩＦ|＃ＥＬＳＥＩＦ){1}(.*?)(?=＃ＥＬＳＥＩＦ|＃ＥＬＳＥ|＃ＥＮＤＩＦ|[\r\n])/gm;
 
-        value = value.replace(re, '$1AmsOperationStart--$2--AMSOperationEnd')
+        value = value.replace(re, '$1AmsOperationStart--$2--AMSOperationEnd');
 
         //开始逐一判断参数合法性
 
+        var amsOperation = /AmsOperationStart--(.*?)--AMSOperationEnd/gm;
 
-        var operation = value.match(/AmsOperationStart--(.*?)--AMSOperationEnd/gm);
+        var operation = value.match(amsOperation);
         //首先靠猜测
-        console.log(operation)
         if (operation) {
-            var $1 = RegExp.$1;
-            console.log($1);
+            operation.forEach(function (item) {
+
+
+                var source = item.match(amsOperation);
+                var $1 = RegExp.$1;
+                //首先从最右侧的括号算起
+                var rightEnd = $1.lastIndexOf(')');
+                var step1 = $1.substring(0, rightEnd + 1);
+                //进行第一次判断
+                if (JSHINT('var test=' + step1 + ';')) {
+                    console.log(step1 + '通过效验');
+                } else {
+                    console.log(step1 + '未能通过效验');
+                }
+
+            });
         }
         var i = 0;
 
