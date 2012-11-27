@@ -34,7 +34,7 @@
 
 <p></p>
 <textarea id="test" cols="60" rows="10">
-    #if(a>0) hahahah #elseif(a<0) yes #elseif(2>0) yes2 #else no default #end
+    #if(a>0) al)))))rt((())))))))(()) #elseif(a<0) yes #elseif(2>0) yes2 #else no default #end
 
     #if(test>2)
     <li>hello world</li>
@@ -73,191 +73,209 @@
 </textarea>
 <script>
 
-    var $item;
+var $item;
 
-    var $test;
+var $test;
 
-    var IFANDEACH = /([\\]*#if|[\\]*#each|[\\]*#js)([\s]*\([^#]*\))?/gm;
+var IFANDEACH = /([\\]*#if|[\\]*#each|[\\]*#js)([\s]*\([^#]*\))?/gm;
 
-    //RegExp object does not support lookbehind
-    //so with the code below
-    function translateIF(value) {
-        var tempValue = value;
+//RegExp object does not support lookbehind
+//so with the code below
+function translateIF(value) {
+    var tempValue = value;
 
-        function _translateIf() {
-            var allIf = tempValue.match(IFANDEACH);
+    function _translateIf() {
+        var allIf = tempValue.match(IFANDEACH);
 
-            if (!allIf) {
-                return;
-            }
-            //query first #if
-            var point = tempValue.indexOf(allIf[0]);
+        if (!allIf) {
+            return;
+        }
+        //query first #if
+        var point = tempValue.indexOf(allIf[0]);
 
-            //check for escape
-            var isEscape = tempValue.substring(point).indexOf('\\') === 0;
+        //check for escape
+        var isEscape = tempValue.substring(point).indexOf('\\') === 0;
 
-            //as the starting point of the first interception string
-            tempValue = tempValue.substring(point + allIf[0].length);
+        //as the starting point of the first interception string
+        tempValue = tempValue.substring(point + allIf[0].length);
 
-            if (isEscape) {
-                _translateIf();
-                return;
-            }
-
-            //find the #end last place
-            var current = tempValue.match(/[\s\S]*?([^\\]#end){1}/);
-
-            //if you find the "#end"
-            if (current) {
-                //and  can not contain the "#if #each..."
-                var matchIF = current[0].match(IFANDEACH);
-                if ((!matchIF || (matchIF[0] && matchIF[0].indexOf('\\') === 0))) {
-                    //if not found,it proved to be correct
-                    var a = allIf[0].match(IFANDEACH);
-                    var _a = '', _b = '';
-
-                    //replaced the a full-width in order to avoid duplication find
-                    if (RegExp.$1 === '#if') {
-                        _a = '＃ＩＦ';
-                        _b = '＃ＥＮＤＩＦ'
-                    } else if (RegExp.$1 == '#each') {
-                        _a = '＃ＥＡＣＨ';
-                        _b = '＃ＥＮＤＥＡＣＨ'
-                    } else if (RegExp.$1 == '#js') {
-                        _a = '＃ＪＳ';
-                        _b = '＃ＥＮＤＪＳ'
-                    }
-
-                    var replaceStr = _a + RegExp.$2 + current[0].substring(0, current[0].lastIndexOf('#end')) + _b;
-                    if (RegExp.$1 === '#if') replaceStr = replaceElse(replaceStr);
-                    //Find if  else  end
-                    value = value.replace(allIf[0] + current[0], replaceStr);
-                    //repeat find
-                    tempValue = value;
-                }
-            }
-
+        if (isEscape) {
             _translateIf();
+            return;
         }
 
-        var elseRule = /([\\]*#elseif|[\\]*#else[\s]){1}(\([^)]+\))*/gm;
+        //find the #end last place
+        var current = tempValue.match(/[\s\S]*?([^\\]#end){1}/);
 
-        //替换#if #end之间的#else  #elseif
-        function replaceElse(str) {
-            str = str.replace(/\\#(elseif|else){1}/gm, 'AMSTEMPBLOCKS==$1==');
-            str = str.replace(/#(elseif)[\s]*(\([^)]+\)){1}/gm, '＃ＥＬＳＥＩＦ$2');
-            str = str.replace(/#else/gm, '＃ＥＬＳＥ');
-            //Revert TEMPBLOCK
-            str = str.replace(/AMSTEMPBLOCKS==(.*)==/gm, '\\#$1');
-            return str;
+        //if you find the "#end"
+        if (current) {
+            //and  can not contain the "#if #each..."
+            var matchIF = current[0].match(IFANDEACH);
+            if ((!matchIF || (matchIF[0] && matchIF[0].indexOf('\\') === 0))) {
+                //if not found,it proved to be correct
+                var a = allIf[0].match(IFANDEACH);
+                var _a = '', _b = '';
+
+                //replaced the a full-width in order to avoid duplication find
+                if (RegExp.$1 === '#if') {
+                    _a = '＃ＩＦ';
+                    _b = '＃ＥＮＤＩＦ'
+                } else if (RegExp.$1 == '#each') {
+                    _a = '＃ＥＡＣＨ';
+                    _b = '＃ＥＮＤＥＡＣＨ'
+                } else if (RegExp.$1 == '#js') {
+                    _a = '＃ＪＳ';
+                    _b = '＃ＥＮＤＪＳ'
+                }
+
+                var replaceStr = _a + RegExp.$2 + current[0].substring(0, current[0].lastIndexOf('#end')) + _b;
+                if (RegExp.$1 === '#if') replaceStr = replaceElse(replaceStr);
+                //Find if  else  end
+                value = value.replace(allIf[0] + current[0], replaceStr);
+                //repeat find
+                tempValue = value;
+            }
         }
 
         _translateIf();
-
-        //接下来分析模板
-        function replaceEcho(_value) {
-            var re = /[\\]+#\{([^}]+)\}/gm;
-            value = _value.replace(re, '{{AmsVariableCommentStart--$1--AmsVariableCommentEnd');
-            value = value.replace(/#\{([^}]+)\}/gm, '{{AmsVariableStart--$1--AmsVariableEnd}}')
-        }
-
-        replaceEcho(value);
-
-        return value;
     }
 
-    //寻找变量值
-    function transportOperation(value) {
+    var elseRule = /([\\]*#elseif|[\\]*#else[\s]){1}(\([^)]+\))*/gm;
+
+    //替换#if #end之间的#else  #elseif
+    function replaceElse(str) {
+        str = str.replace(/\\#(elseif|else){1}/gm, 'AMSTEMPBLOCKS==$1==');
+        str = str.replace(/#(elseif)[\s]*(\([^)]+\)){1}/gm, '＃ＥＬＳＥＩＦ$2');
+        str = str.replace(/#else/gm, '＃ＥＬＳＥ');
+        //Revert TEMPBLOCK
+        str = str.replace(/AMSTEMPBLOCKS==(.*)==/gm, '\\#$1');
+        return str;
+    }
+
+    _translateIf();
+
+    //接下来分析模板
+    function replaceEcho(_value) {
+        var re = /[\\]+#\{([^}]+)\}/gm;
+        value = _value.replace(re, '{{AmsVariableCommentStart--$1--AmsVariableCommentEnd');
+        value = value.replace(/#\{([^}]+)\}/gm, '{{AmsVariableStart--$1--AmsVariableEnd}}')
+    }
+
+    replaceEcho(value);
+
+    return value;
+}
+
+//寻找变量值
+function transportOperation(value) {
 
 
-        var re = /(＃ＩＦ|＃ＥＬＳＥＩＦ){1}(.*?)(?=＃ＥＬＳＥＩＦ|＃ＥＬＳＥ|＃ＥＮＤＩＦ|[\r\n])/gm;
+    var re = /(＃ＩＦ|＃ＥＬＳＥＩＦ){1}(.*?)(?=＃ＥＬＳＥＩＦ|＃ＥＬＳＥ|＃ＥＮＤＩＦ|[\r\n])/gm;
 
-        value = value.replace(re, '$1AmsOperationStart--$2--AMSOperationEnd');
+    value = value.replace(re, '$1AmsOperationStart--$2--AMSOperationEnd');
 
-        //开始逐一判断参数合法性
+    //开始逐一判断参数合法性
 
-        var amsOperation = /AmsOperationStart--(.*?)--AMSOperationEnd/gm;
+    var amsOperation = /AmsOperationStart--(.*?)--AMSOperationEnd/gm;
 
-        var operation = value.match(amsOperation);
-        //首先靠猜测
-        if (operation) {
-            operation.forEach(function (item) {
+    var operation = value.match(amsOperation);
+    //首先靠猜测
+    if (operation) {
+        operation.forEach(function (item) {
+            var source = item.match(amsOperation);
+            var $1 = RegExp.$1;
+            //首先查询最右侧括号
+            var rightEnd = $1.lastIndexOf(')');
+            var step1 = $1.substring(0, rightEnd + 1);
+            var step1End = $1.substring(rightEnd + 1);
 
-
-                var source = item.match(amsOperation);
-                var $1 = RegExp.$1;
-                //首先从最右侧的括号算起
-                var rightEnd = $1.lastIndexOf(')');
-                var step1 = $1.substring(0, rightEnd + 1);
-                //进行第一次判断
-                if (JSHINT('var test=' + step1 + ';')) {
-                    console.log(step1 + '通过效验');
-                } else {
-                    console.log(step1 + '未能通过效验');
+            //默认以最后一个右括号为截至，进行一次匹配
+            if (JSHINT('var test=' + step1.trim() + ';')) {
+                if (step1End.trim().length > 0) {
+                    //当匹配成功时，AmsOperationStart转换为AmsOperationSuccessStart
+                    value = value.replace('AmsOperationStart--' + $1 + '--AMSOperationEnd', 'AmsOperationSuccessStart--' + step1 + '--AMSOperationSuccessEnd' + step1End);
                 }
+            } else {
+                //如果词法效验失败，则递归减少右括号以再尝试匹配
+                var a = new Date();
 
-            });
-        }
-        var i = 0;
-
-        return value;
-    }
-
-    document.getElementById('test').onkeydown = function () {
-        var self = this;
-        setTimeout(function () {
-            var value = self.value;
-            //document.getElementById('b').value = translateIF(self.value);
-            document.getElementById('b').value = translateIF(self.value);
-            var c = document.getElementById('c');
-            var bValue = document.getElementById('b').value;
-            var html = [];
-
-            //捕获#IF  #EACH后方的变量，并判断正确性
-
-            bValue = transportOperation(bValue);
-            c.value = bValue;
-            return;
-            //开始转换为JS
-            var rule = /(＃ＩＦ|＃ＥＬＳＥ(?:ＩＦ)*|＃ＥＮＤＩＦ|＃ＥＡＣＨ|＃ＥＮＤＥＡＣＨ)[\s]*(?:\((.*)\))*/gm;
-            bValue.split(/[\r\n]/).forEach(function (str) {
-                if (rule.test(str)) {
-                    switch (RegExp.$1) {
-                        case "＃ＩＦ":
-                            html.push('if (' + RegExp.$2 + '){');
-                            break;
-                        case "＃ＥＬＳＥＩＦ":
-                            html.push('}else if(' + RegExp.$2 + '){');
-                            break;
-                        case "＃ＥＬＳＥ":
-                            html.push('}else{');
-                            break;
-                        case "＃ＥＮＤＩＦ":
-                            html.push('}');
-                            break;
-                        case "＃ＥＡＣＨ":
-
-                            html.push(RegExp.$2 + '.forEach(function(item,index){');
-                            break;
-                        case "＃ＥＮＤＥＡＣＨ":
-                            html.push('})');
-                            break;
+                var _step1 = step1;
+                var i = 0;
+                var length = step1.length;
+                while (_step1.length > 1) {
+                    if (JSHINT('var test=' + _step1.trim() + ';')) {
+                        value = value.replace('AmsOperationStart--' + $1 + '--AMSOperationEnd', 'AmsOperationSuccessStart--' + _step1 + '--AMSOperationSuccessEnd' + step1.substring(_step1.length));
+                        break;
                     }
-                } else {
-                    html.push('tpl.push("' + str + '");');
+                    _step1 = _step1.substring(0, step1.length - i);
+                    if (i >= step1.length) break;
+                    i++;
+
                 }
-            });
+            }
 
-            c.value = html.join('\r\n');
+        });
+    }
+    var i = 0;
 
-        }, 0);
-    };
+    return value;
+}
 
-    window.onload = function () {
-        setTimeout(function () {
-            document.getElementById('b').value = document.getElementById('test').value;
-        }, 0);
-    };
+document.getElementById('test').onkeydown = function () {
+    var self = this;
+    setTimeout(function () {
+        var value = self.value;
+        //document.getElementById('b').value = translateIF(self.value);
+        document.getElementById('b').value = translateIF(self.value);
+        var c = document.getElementById('c');
+        var bValue = document.getElementById('b').value;
+        var html = [];
+
+        //捕获#IF  #EACH后方的变量，并判断正确性
+
+        bValue = transportOperation(bValue);
+        c.value = bValue;
+        return;
+        //开始转换为JS
+        var rule = /(＃ＩＦ|＃ＥＬＳＥ(?:ＩＦ)*|＃ＥＮＤＩＦ|＃ＥＡＣＨ|＃ＥＮＤＥＡＣＨ)[\s]*(?:\((.*)\))*/gm;
+        bValue.split(/[\r\n]/).forEach(function (str) {
+            if (rule.test(str)) {
+                switch (RegExp.$1) {
+                    case "＃ＩＦ":
+                        html.push('if (' + RegExp.$2 + '){');
+                        break;
+                    case "＃ＥＬＳＥＩＦ":
+                        html.push('}else if(' + RegExp.$2 + '){');
+                        break;
+                    case "＃ＥＬＳＥ":
+                        html.push('}else{');
+                        break;
+                    case "＃ＥＮＤＩＦ":
+                        html.push('}');
+                        break;
+                    case "＃ＥＡＣＨ":
+
+                        html.push(RegExp.$2 + '.forEach(function(item,index){');
+                        break;
+                    case "＃ＥＮＤＥＡＣＨ":
+                        html.push('})');
+                        break;
+                }
+            } else {
+                html.push('tpl.push("' + str + '");');
+            }
+        });
+
+        c.value = html.join('\r\n');
+
+    }, 0);
+};
+
+window.onload = function () {
+    setTimeout(function () {
+        document.getElementById('b').value = document.getElementById('test').value;
+    }, 0);
+};
 
 </script>
 </body>
