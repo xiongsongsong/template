@@ -32,7 +32,7 @@
 
 <p></p>
 <textarea id="test" cols="60" rows="10">
-    #if(a>0) hahahah #elseif(a<0) yes #elseif(2>0) yes2 #else no default #end
+    #if(a>0) hahahah #elseif(a<0) yes #elseif(2>0) yes2 #else no default @end
 
     #if(test>2)
     <li>hello world</li>
@@ -101,13 +101,17 @@
 
                     //replaced the a full-width in order to avoid duplication find
                     if (RegExp.$1 === '#if') {
-                        _a = '\r\n＃ＩＦ';
-                        _b = '\r\n＃ＥＮＤＩＦ\r\n'
+                        _a = '＃ＩＦ';
+                        _b = '＃ＥＮＤＩＦ'
                     } else if (RegExp.$1 == '#each') {
-                        _a = '\r\n＃ＥＡＣＨ';
-                        _b = '\r\n＃ＥＮＤＥＡＣＨ\r\n'
+                        _a = '＃ＥＡＣＨ';
+                        _b = '＃ＥＮＤＥＡＣＨ'
+                    } else if (RegExp.$1 == '#js') {
+                        _a = '＃ＪＳ';
+                        _b = '＃ＥＮＤＪＳ'
                     }
-                    var replaceStr = _a + RegExp.$2 + '\r\n' + current[0].substring(0, current[0].lastIndexOf('#end')) + _b;
+
+                    var replaceStr = _a + RegExp.$2 + current[0].substring(0, current[0].lastIndexOf('#end')) + _b;
                     if (RegExp.$1 === '#if') replaceStr = replaceElse(replaceStr);
                     //Find if  else  end
                     value = value.replace(allIf[0] + current[0], replaceStr);
@@ -124,8 +128,8 @@
         //替换#if #end之间的#else  #elseif
         function replaceElse(str) {
             str = str.replace(/\\#(elseif|else){1}/gm, 'AMSTEMPBLOCKS==$1==');
-            str = str.replace(/#(elseif)[\s]*(\([^)]+\)){1}/gm, '\r\n＃ＥＬＳＥＩＦ$2\r\n');
-            str = str.replace(/#else/gm, '\r\n＃ＥＬＳＥ\r\n');
+            str = str.replace(/#(elseif)[\s]*(\([^)]+\)){1}/gm, '＃ＥＬＳＥＩＦ$2');
+            str = str.replace(/#else/gm, '＃ＥＬＳＥ');
             //Revert TEMPBLOCK
             str = str.replace(/AMSTEMPBLOCKS==(.*)==/gm, '\\#$1');
             return str;
@@ -134,7 +138,13 @@
         _translateIf();
 
         //接下来分析模板
-        //console.log(value.match(/(＃ＩＦ|＃ＥＮＤＩＦ|＃ＥＡＣＨ|＃ＥＮＤＥＡＣＨ)/).join(''));
+        function replaceEcho(_value) {
+            var re = /[\\]+#\{([^}]+)\}/gm;
+            value = _value.replace(re, '{{AmsVariableCommentStart--$1--AmsVariableCommentEnd');
+            value = value.replace(/#\{([^}]+)\}/gm, '{{AmsVariableStart--$1--AmsVariableEnd}}')
+        }
+
+        replaceEcho(value);
 
         return value;
     }
@@ -151,7 +161,6 @@
             var rule = /(＃ＩＦ|＃ＥＬＳＥ(?:ＩＦ)*|＃ＥＮＤＩＦ|＃ＥＡＣＨ|＃ＥＮＤＥＡＣＨ)[\s]*(?:\((.*)\))*/gm;
             bValue.split(/[\r\n]/).forEach(function (str) {
                 if (rule.test(str)) {
-                    console.log(RegExp.$1)
                     switch (RegExp.$1) {
                         case "＃ＩＦ":
                             html.push('if (' + RegExp.$2 + '){');
@@ -182,7 +191,6 @@
 
         }, 0);
     };
-
 
     window.onload = function () {
         setTimeout(function () {
