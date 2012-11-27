@@ -188,13 +188,10 @@ function transportOperation(value) {
             var rightEnd = $1.lastIndexOf(')');
             var step1 = $1.substring(0, rightEnd + 1);
             var step1End = $1.substring(rightEnd + 1);
-
             //默认以最后一个右括号为截至，进行一次匹配
             if (JSHINT('var test=' + step1.trim() + ';')) {
-                if (step1End.trim().length > 0) {
-                    //当匹配成功时，AmsOperationStart转换为AmsOperationSuccessStart
-                    value = value.replace('AmsOperationStart--' + $1 + '--AMSOperationEnd', 'AmsOperationSuccessStart--' + step1 + '--AMSOperationSuccessEnd' + step1End);
-                }
+                //当匹配成功时，AmsOperationStart转换为AmsOperationSuccessStart
+                value = value.replace('AmsOperationStart--' + $1 + '--AMSOperationEnd', 'AmsOperationSuccessStart--' + step1 + '--AMSOperationSuccessEnd' + step1End);
             } else {
                 //如果词法效验失败，则递归减少右括号以再尝试匹配
                 var a = new Date();
