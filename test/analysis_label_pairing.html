@@ -28,11 +28,12 @@
 </head>
 <body>
 
-<h1>Analysis label pairing</h1>
+<h1>Analysis label pairing todo:逐行解析并还原为JS模板</h1>
 
 <p></p>
 <textarea id="test" cols="60" rows="10">
     <h1>测试</h1>
+
     <h2 class="#if(1>2)A#elseif(2>3)B#elseif(2>1)C#elseD#end"></h2>
     <ul>
         #if(1>0)不参与运算()测()试
@@ -45,6 +46,11 @@
         #end
     </ul>
     <p>#{length}</p>
+
+    #js
+    var a=123;
+    var c=123;
+    #end
 </textarea>
 
 <textarea id="b">
@@ -55,8 +61,6 @@
 
 </textarea>
 <script>
-
-
 
 
 var commentFlag = [
@@ -70,11 +74,15 @@ var commentFlag = [
 ];
 
 
-
 function temporaryProtection(value) {
+
     commentFlag.forEach(function (o) {
         value = value.replace(o[0], o[1])
     });
+
+    //转换JS代码块
+    value = value.replace(/#js([\s\S]*?)#end/gm, 'AMS_JS_BLOCK$1AMS_JS_BLOCK');
+
     return value
 }
 
@@ -92,7 +100,7 @@ function replaceElse(str) {
 //so with the code below
 function translateIF(value) {
 
-    var IFANDEACH = /(#if|#each|#js)([\s]*\([^#]+\))/gm;
+    var IFANDEACH = /(#if|#each)(\s*\(.+\)){1}/gm;
 
     //首先
     value = temporaryProtection(value);
@@ -249,6 +257,7 @@ document.getElementById('test').onkeydown = function () {
         bValue = transportOperation(bValue);
         //捕获变量声明
         bValue = transportVar(bValue);
+
         c.value = bValue;
         return;
         //开始转换为JS
