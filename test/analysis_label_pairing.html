@@ -23,8 +23,6 @@
             margin: 0;
             font-family: Consolas, sans-serif;
             font-size: 12px;
-            overflow: auto;
-            white-space: nowrap;
         }
     </style>
 </head>
@@ -32,41 +30,21 @@
 
 <h1>Analysis label pairing</h1>
 
-<h2>Support #if|#each and #end todo:\#if在模板分析后，不应该将转义符暴露出来</h2>
-
 <p></p>
 <textarea id="test" cols="60" rows="10">
-    #if(a>0) al)))))rt((())))))))(()) #elseif(a<0) yes #elseif(2>0) yes2 #else no default #end
-
-    #if(test>2)
-    <li>hello world</li>
-    #end
-
-    #each(customList)
-    <li>姓名：#{name} 年龄：#{age} 身高:#{height}</li>
-    #end
-
-    \#var arr=[123,333,4444,5555];
-
-    #var abc=123123123123;
-
-    \#var 不应该出现=123123123123;
-
-    #each(arr)
-    <li>#{ item + ':' + (index+1) }</li>
-    #end
-    //http://tms.taobao.com/page/com.taobao.cms.tag.model.ImageLink@2f083c94?spm=0.0.0.1.unGWBE
-
-    //暂时不支持遍历对象
-
-
-    #js
-
-    var str=123;
-
-    var str="adf\#end"
-    #end
-
+    <h1>测试</h1>
+    <h2 class="#if(1>2)A#elseif(2>3)B#elseif(2>1)C#elseD#end"></h2>
+    <ul>
+        #if(1>0)不参与运算()测()试
+        <li>一大于零</li>
+        #elseif(2>1)
+        1\#elseif(111>111)2
+        <li>二大于一</li>
+        #else
+        <li>最后的分支</li>
+        #end
+    </ul>
+    <p>#{length}</p>
 </textarea>
 
 <textarea id="b">
@@ -78,17 +56,45 @@
 </textarea>
 <script>
 
-var $item;
 
-var $test;
 
-var IFANDEACH = /([\\]*#if|[\\]*#each|[\\]*#js)([\s]*\([^#]+\))/gm;
+
+var commentFlag = [
+    [/\\#if/gm , 'AMS_IF_COMMENT' , '\\#if'],
+    [/\\#elseif/gm , 'AMS_ELSEIF_COMMENT' , '\\#elseif'],
+    [/\\#else/gm , 'AMS_ELSE_COMMENT' , '\\#else'],
+    [/\\#each/gm , 'AMS_EACH_COMMENT' , '\\#each'],
+    [/\\#end/gm , 'AMS_END_COMMENT' , '\\#end'],
+    [/\\#var/gm , 'AMS_VAR_COMMENT' , '\\#var'],
+    [/\\#js/gm , 'AMS_JS_COMMENT' , '\\#js']
+];
+
+
+
+function temporaryProtection(value) {
+    commentFlag.forEach(function (o) {
+        value = value.replace(o[0], o[1])
+    });
+    return value
+}
+
+//替换#if  #end 之间的elseif 和 #else
+function replaceElse(str) {
+
+    str = str.replace(/#(elseif)[\s]*(\([^)]+\)){1}/gm, '＃ＥＬＳＥＩＦ$2');
+    str = str.replace(/#else/gm, '＃ＥＬＳＥ');
+    //Revert TEMPBLOCK
+    str = str.replace(/AMSTEMPBLOCKS==(.*)==/gm, '\\#$1');
+    return str;
+}
 
 //RegExp object does not support lookbehind
 //so with the code below
 function translateIF(value) {
 
-    //为避免转义的干扰，所以先对转义进行临时替换
+    var IFANDEACH = /(#if|#each|#js)([\s]*\([^#]+\))/gm;
+
+    //首先
     value = temporaryProtection(value);
 
     var tempValue = value;
@@ -101,26 +107,18 @@ function translateIF(value) {
         //query first #if
         var point = tempValue.indexOf(allIf[0]);
 
-        //check for escape
-        var isEscape = tempValue.substring(point).indexOf('\\') === 0;
-
         //as the starting point of the first interception string
         tempValue = tempValue.substring(point + allIf[0].length);
 
-        if (isEscape) {
-            _translateIf();
-            return;
-        }
-
         //find the #end last place
-        var current = tempValue.match(/[\s\S]*?([^\\]#end){1}/);
+        var current = tempValue.match(/[\s\S]*?(#end){1}/);
 
         //if you find the "#end"
         if (current) {
             //and  can not contain the "#if #each..."
             var matchIF = current[0].match(IFANDEACH);
             //如果片段中不再包含IF。。 或者为注释形态的IF。。，则表示为预期的片段
-            if ((!matchIF || (matchIF[0] && matchIF[0].indexOf('\\') === 0))) {
+            if (!matchIF) {
                 //if not found,it proved to be correct
                 var a = allIf[0].match(IFANDEACH);
                 var _a = '', _b = '';
@@ -149,24 +147,6 @@ function translateIF(value) {
         _translateIf();
     }
 
-    function temporaryProtection(value) {
-        value = value.replace(/\\#if/gm, 'AmsIfCommentFlag');
-        value = value.replace(/\\#each/gm, 'AmsEachCommentFlag');
-        value = value.replace(/\\#end/gm, 'AmsEndCommentFlag');
-        value = value.replace(/\\#elseif/gm, 'AmsElseIfCommentFlag');
-        value = value.replace(/\\#else/gm, 'AmsElseCommentFlag');
-        return value;
-    }
-
-    //替换#if  #end 之间的elseif 和 #else
-    function replaceElse(str) {
-
-        str = str.replace(/#(elseif)[\s]*(\([^)]+\)){1}/gm, '＃ＥＬＳＥＩＦ$2');
-        str = str.replace(/#else/gm, '＃ＥＬＳＥ');
-        //Revert TEMPBLOCK
-        str = str.replace(/AMSTEMPBLOCKS==(.*)==/gm, '\\#$1');
-        return str;
-    }
 
     _translateIf();
 
@@ -184,7 +164,6 @@ function translateIF(value) {
 
 //寻找变量值
 function transportOperation(value) {
-
 
     var re = /(＃ＩＦ|＃ＥＬＳＥＩＦ|＃ＥＡＣＨ){1}(.*?)(?=＃ＥＬＳＥＩＦ|＃ＥＬＳＥ|＃ＥＮＤＩＦ|[\r\n])/gm;
 
