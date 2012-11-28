@@ -194,6 +194,7 @@ function transportOperation(value) {
             var rightEnd = $1.lastIndexOf(')');
             var step1 = $1.substring(0, rightEnd + 1);
             var step1End = $1.substring(rightEnd + 1);
+            console.log(step1)
             if (JSHINT('var test=' + step1.trim() + ';')) {
                 value = value.replace('AmsOperationStart--' + $1 + '--AMSOperationEnd', 'AmsOperationSuccessStart--' + step1 + '--AMSOperationSuccessEnd' + step1End);
             } else {
@@ -202,7 +203,7 @@ function transportOperation(value) {
                 var length = step1.length;
                 while (_step1.length > 1) {
                     if (JSHINT('var test=' + _step1.trim() + ';')) {
-                        value = value.replace('AmsOperationStart--' + $1 + '--AMSOperationEnd', 'AmsOperationSuccessStart--' + _step1.trim() + '--AMSOperationSuccessEnd' + step1.substring(_step1.trim().length));
+                        value = value.replace('AmsOperationStart--' + $1 + '--AMSOperationEnd', 'AmsOperationSuccessStart--' + _step1.trim() + '--AMSOperationSuccessEnd' + step1.trim().substring(_step1.trim().length));
                         break;
                     }
                     _step1 = _step1.substring(0, step1.length - i);
