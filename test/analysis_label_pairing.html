@@ -23,6 +23,8 @@
             margin: 0;
             font-family: Consolas, sans-serif;
             font-size: 12px;
+            overflow: auto;
+            white-space: nowrap;
         }
     </style>
 </head>
@@ -44,7 +46,11 @@
     <li>姓名：#{name} 年龄：#{age} 身高:#{height}</li>
     #end
 
-    #var arr=[123,333,4444,5555]
+    \#var arr=[123,333,4444,5555];
+
+    #var abc=123123123123;
+
+    \#var 不应该出现=123123123123;
 
     #each(arr)
     <li>#{ item + ':' + (index+1) }</li>
@@ -170,7 +176,7 @@ function translateIF(value) {
 function transportOperation(value) {
 
 
-    var re = /(＃ＩＦ|＃ＥＬＳＥＩＦ){1}(.*?)(?=＃ＥＬＳＥＩＦ|＃ＥＬＳＥ|＃ＥＮＤＩＦ|[\r\n])/gm;
+    var re = /(＃ＩＦ|＃ＥＬＳＥＩＦ|＃ＥＡＣＨ){1}(.*?)(?=＃ＥＬＳＥＩＦ|＃ＥＬＳＥ|＃ＥＮＤＩＦ|[\r\n])/gm;
 
     value = value.replace(re, '$1AmsOperationStart--$2--AMSOperationEnd');
 
@@ -188,32 +194,42 @@ function transportOperation(value) {
             var rightEnd = $1.lastIndexOf(')');
             var step1 = $1.substring(0, rightEnd + 1);
             var step1End = $1.substring(rightEnd + 1);
-            //默认以最后一个右括号为截至，进行一次匹配
             if (JSHINT('var test=' + step1.trim() + ';')) {
-                //当匹配成功时，AmsOperationStart转换为AmsOperationSuccessStart
                 value = value.replace('AmsOperationStart--' + $1 + '--AMSOperationEnd', 'AmsOperationSuccessStart--' + step1 + '--AMSOperationSuccessEnd' + step1End);
             } else {
-                //如果词法效验失败，则递归减少右括号以再尝试匹配
-                var a = new Date();
-
                 var _step1 = step1;
                 var i = 0;
                 var length = step1.length;
                 while (_step1.length > 1) {
                     if (JSHINT('var test=' + _step1.trim() + ';')) {
-                        value = value.replace('AmsOperationStart--' + $1 + '--AMSOperationEnd', 'AmsOperationSuccessStart--' + _step1 + '--AMSOperationSuccessEnd' + step1.substring(_step1.length));
+                        value = value.replace('AmsOperationStart--' + $1 + '--AMSOperationEnd', 'AmsOperationSuccessStart--' + _step1.trim() + '--AMSOperationSuccessEnd' + step1.substring(_step1.trim().length));
                         break;
                     }
                     _step1 = _step1.substring(0, step1.length - i);
                     if (i >= step1.length) break;
                     i++;
-
                 }
             }
-
         });
     }
-    var i = 0;
+
+    return value;
+}
+
+//转换var关键字
+function transportVar(value) {
+    var re = /^[\s]*[\\]*#var(.*)$/gm;
+    value = value.replace(/^([^\r\n\S]*?)\\([\\]*)#(var(?:.*)+)*$/gm, 'AmsVarCommentStart--$1$2#$3--AmsVarCommentEnd');
+    var match = value.match(re);
+    if (match) {
+        match.forEach(function (str) {
+            var strTrim = str.trim();
+            if (strTrim.indexOf('\\') !== 0) {
+                var isHasSemicolon = strTrim.substring(strTrim.length - 1) === ';';
+                value = value.replace(strTrim, 'AmsVarStart--' + strTrim.substring(1) + (isHasSemicolon ? '' : ';') + '--AmsVarEnd');
+            }
+        });
+    }
 
     return value;
 }
@@ -231,6 +247,7 @@ document.getElementById('test').onkeydown = function () {
         //捕获#IF  #EACH后方的变量，并判断正确性
 
         bValue = transportOperation(bValue);
+        bValue = transportVar(bValue);
         c.value = bValue;
         return;
         //开始转换为JS
