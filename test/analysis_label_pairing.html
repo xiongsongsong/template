@@ -69,7 +69,6 @@
 
 </textarea>
 
-
 <textarea id="b">
 
 </textarea>
@@ -83,19 +82,22 @@ var $item;
 
 var $test;
 
-var IFANDEACH = /([\\]*#if|[\\]*#each|[\\]*#js)([\s]*\([^#]*\))?/gm;
+var IFANDEACH = /([\\]*#if|[\\]*#each|[\\]*#js)([\s]*\([^#]+\))/gm;
 
 //RegExp object does not support lookbehind
 //so with the code below
 function translateIF(value) {
+
+    //为避免转义的干扰，所以先对转义进行临时替换
+    value = temporaryProtection(value);
+
     var tempValue = value;
 
     function _translateIf() {
         var allIf = tempValue.match(IFANDEACH);
 
-        if (!allIf) {
-            return;
-        }
+        if (!allIf) return;
+
         //query first #if
         var point = tempValue.indexOf(allIf[0]);
 
@@ -117,6 +119,7 @@ function translateIF(value) {
         if (current) {
             //and  can not contain the "#if #each..."
             var matchIF = current[0].match(IFANDEACH);
+            //如果片段中不再包含IF。。 或者为注释形态的IF。。，则表示为预期的片段
             if ((!matchIF || (matchIF[0] && matchIF[0].indexOf('\\') === 0))) {
                 //if not found,it proved to be correct
                 var a = allIf[0].match(IFANDEACH);
@@ -146,11 +149,18 @@ function translateIF(value) {
         _translateIf();
     }
 
-    var elseRule = /([\\]*#elseif|[\\]*#else[\s]){1}(\([^)]+\))*/gm;
+    function temporaryProtection(value) {
+        value = value.replace(/\\#if/gm, 'AmsIfCommentFlag');
+        value = value.replace(/\\#each/gm, 'AmsEachCommentFlag');
+        value = value.replace(/\\#end/gm, 'AmsEndCommentFlag');
+        value = value.replace(/\\#elseif/gm, 'AmsElseIfCommentFlag');
+        value = value.replace(/\\#else/gm, 'AmsElseCommentFlag');
+        return value;
+    }
 
-    //替换#if #end之间的#else  #elseif
+    //替换#if  #end 之间的elseif 和 #else
     function replaceElse(str) {
-        str = str.replace(/\\#(elseif|else){1}/gm, 'AMSTEMPBLOCKS==$1==');
+
         str = str.replace(/#(elseif)[\s]*(\([^)]+\)){1}/gm, '＃ＥＬＳＥＩＦ$2');
         str = str.replace(/#else/gm, '＃ＥＬＳＥ');
         //Revert TEMPBLOCK
@@ -187,6 +197,7 @@ function transportOperation(value) {
     var operation = value.match(amsOperation);
     //首先靠猜测
     if (operation) {
+        var a = (a > 0 && a > "\\#ifend");
         operation.forEach(function (item) {
             var source = item.match(amsOperation);
             var $1 = RegExp.$1;
@@ -194,7 +205,6 @@ function transportOperation(value) {
             var rightEnd = $1.lastIndexOf(')');
             var step1 = $1.substring(0, rightEnd + 1);
             var step1End = $1.substring(rightEnd + 1);
-            console.log(step1)
             if (JSHINT('var test=' + step1.trim() + ';')) {
                 value = value.replace('AmsOperationStart--' + $1 + '--AMSOperationEnd', 'AmsOperationSuccessStart--' + step1 + '--AMSOperationSuccessEnd' + step1End);
             } else {
@@ -235,6 +245,15 @@ function transportVar(value) {
     return value;
 }
 
+//转换JS代码块
+function transportJS(value) {
+    var _jsRe = /＃ＪＳ([\s\S]*)*?＃ＥＮＤＪＳ/gm;
+    var _js = value.match(_jsRe);
+    value = value.replace(_jsRe, 'AmsJsBlockStart--$1--AmsJsBlockEnd');
+    value = value.replace(/AmsJsBlockStart--([\s\S]*?)--AmsJsBlockEnd/gm, 'AmsJsBlockStart--' + encodeURIComponent(RegExp.$1) + '--AmsJsBlockEnd');
+    return value;
+}
+
 document.getElementById('test').onkeydown = function () {
     var self = this;
     setTimeout(function () {
@@ -245,9 +264,11 @@ document.getElementById('test').onkeydown = function () {
         var bValue = document.getElementById('b').value;
         var html = [];
 
+        //首先捕获JS代码区域
+        bValue = transportJS(bValue);
         //捕获#IF  #EACH后方的变量，并判断正确性
-
         bValue = transportOperation(bValue);
+        //捕获变量声明
         bValue = transportVar(bValue);
         c.value = bValue;
         return;
