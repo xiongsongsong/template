@@ -234,9 +234,14 @@ function transportVar(value) {
 //转换JS代码块
 function transportJS(value) {
     var _jsRe = /AMS_FLAG_JS([\s\S]+?)AMS_FLAG_ENDJS/gm;
-    var _js = value.match(_jsRe);
-    value = value.replace(_jsRe, 'AmsJsBlockStart--$1--AmsJsBlockEnd');
-    value = value.replace(/AmsJsBlockStart--([\s\S]*?)--AmsJsBlockEnd/gm, 'AmsJsBlockStart--' + encodeURIComponent(RegExp.$1) + '--AmsJsBlockEnd');
+    var match = value.match(_jsRe)
+    if (match) {
+        match.forEach(function (str) {
+            var v = str.match(_jsRe);
+            var $1 = RegExp.$1;
+            value = value.replace(str, 'AMS_FLAG_JS' + encodeURIComponent($1) + 'AMS_FLAG_ENDJS');
+        });
+    }
     return value;
 }
 
@@ -281,24 +286,29 @@ document.getElementById('test').onkeydown = function () {
                     OPEN_IF[0] + '--(?:.+?)--' + CLOSE_IF + '|' +
                     OPEN_IF[1] + '--(?:.+?)--' + CLOSE_IF + '|' +
                     'AMS_FLAG_ELSE|AMS_FLAG_ENDIF)', 'gmi');
+
             //检查Each标签配对
-
-            var tempHTML = [];
-
-            str.split(IF_FLAG).forEach(function (str) {
+            str.split(IF_FLAG).forEach(function (str, i, arr) {
                 if (IF_FLAG.test(str)) {
-                    if (str.indexOf(OPEN_IF[0]) > -1) {
-
-                    }elseif(str.indexOf(OPEN_IF[1])>-1)
+                    if (str.indexOf('AMS_FLAG_IFAMS_OPERATION_SUCCESS') > -1) {
+                        html.push(str.replace(/AMS_FLAG_IFAMS_OPERATION_SUCCESS--(.+)--AMS_OPERATION_SUCCESS/g, 'if($1){'));
+                    } else if (str.indexOf('AMS_FLAG_ELSEIFAMS_OPERATION_SUCCESS' > -1)) {
+                        html.push(str.replace(/AMS_FLAG_ELSEIFAMS_OPERATION_SUCCESS--(.+)--AMS_OPERATION_SUCCESS/, '} else if ($1){ '));
+                    } else if (str.indexOf('AMS_FLAG_ELSE') > -1) {
+                        html.push('} else {');
+                    } else if (str.indexOf('AMS_FLAG_ENDIF')) {
+                        html.push('}');
+                    }
                 } else {
-                    tempHTML.push(str);
+                    html.push('AMS_RENDER.push("' + str + '")');
                 }
+                html.push('\r\n');
+                if (i === arr.length - 1) html.push('AMS_RENDER.push("\\r\\n");');
             });
-
-            console.log(tempHTML.join('\r\n'));
+            html.push('\r\n');
         });
 
-        c.value = html.join('\r\n');
+        c.value = html.join('');
 
     }, 0);
 };
