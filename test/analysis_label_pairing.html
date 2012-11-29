@@ -33,9 +33,7 @@
 <p></p>
 <textarea id="test" cols="60" rows="10">
     <h1>测试</h1>
-    #each(a>123)
-    <p>123123</p>
-    #end
+    #each(a>123) <p>123123</p> #end
     <h2 class="#if(1>2)A#elseif(2>3)B#elseif(2>1)C#elseD#end"></h2>
     <ul>
 
@@ -176,7 +174,7 @@ function translateIF(value) {
 //寻找变量值
 function transportOperation(value) {
 
-    var re = /(AMS_FLAG_IF|AMS_FLAG_ELSEIF|AMS_FLAG_EACH){1}(.*?)(?=AMS_FLAG_ELSEIF|AMS_FLAG_ELSE|AMS_FLAG_ENDIF|[\r\n])/gm;
+    var re = /(AMS_FLAG_IF|AMS_FLAG_ELSEIF|AMS_FLAG_EACH){1}(.*?)(?=AMS_FLAG_ELSEIF|AMS_FLAG_ELSE|AMS_FLAG_ENDIF|AMS_FLAG_ENDEACH|[\r\n])/gm;
 
     value = value.replace(re, '$1AMS_OPERATION--$2--AMS_OPERATION');
 
@@ -237,7 +235,7 @@ function transportVar(value) {
 //转换JS代码块
 function transportJS(value) {
     var _jsRe = /AMS_FLAG_JS([\s\S]+?)AMS_FLAG_ENDJS/gm;
-    var match = value.match(_jsRe)
+    var match = value.match(_jsRe);
     if (match) {
         match.forEach(function (str) {
             var v = str.match(_jsRe);
@@ -272,27 +270,31 @@ document.getElementById('test').onkeydown = function () {
             c.value = bValue;
         }
 
+        //检查IF标签配对
+        var OPEN_IF = [
+            'AMS_FLAG_IFAMS_OPERATION_SUCCESS',
+            'AMS_FLAG_ELSEIFAMS_OPERATION_SUCCESS',
+            'AMS_FLAG_ELSE',
+            'AMS_FLAG_ENDIF'
+        ];
+
+        var CLOSE_IF = 'AMS_OPERATION_SUCCESS';
+        var IF_FLAG = new RegExp('' +
+                '(' +
+                OPEN_IF[0] + '--(?:.+?)--' + CLOSE_IF + '|' +
+                OPEN_IF[1] + '--(?:.+?)--' + CLOSE_IF + '|' +
+                'AMS_FLAG_EACHAMS_OPERATION_SUCCESS' + '--(?:.+?)--' + CLOSE_IF + '|' +
+                'AMS_FLAG_ELSE|AMS_FLAG_ENDIF|AMS_FLAG_ENDEACH)', 'gm');
+
         //开始转换为JS
         bValue.split(/[\r\n]/).forEach(function (str) {
 
-            //检查IF标签配对
-            var OPEN_IF = [
-                'AMS_FLAG_IFAMS_OPERATION_SUCCESS',
-                'AMS_FLAG_ELSEIFAMS_OPERATION_SUCCESS',
-                'AMS_FLAG_ELSE',
-                'AMS_FLAG_ENDIF'
-            ];
 
-            var CLOSE_IF = 'AMS_OPERATION_SUCCESS';
-            var IF_FLAG = new RegExp('' +
-                    '(' +
-                    OPEN_IF[0] + '--(?:.+?)--' + CLOSE_IF + '|' +
-                    OPEN_IF[1] + '--(?:.+?)--' + CLOSE_IF + '|' +
-                    'AMS_FLAG_EACHAMS_OPERATION_SUCCESS' + '--(?:.+?)--' + CLOSE_IF + '|' +
-                    'AMS_FLAG_ELSE|AMS_FLAG_ENDIF|AMS_FLAG_ENDEACH)', 'gm');
 
             //检查IF标签配对
+
             str.split(IF_FLAG).forEach(function (_str, i, arr) {
+
                 if (IF_FLAG.test(_str)) {
                     if (/AMS_FLAG_IFAMS_OPERATION_SUCCESS/.test(_str)) {
                         html.push(_str.replace(/AMS_FLAG_IFAMS_OPERATION_SUCCESS--(.+?)--AMS_OPERATION_SUCCESS/g, 'if $1 {'));
@@ -302,9 +304,9 @@ document.getElementById('test').onkeydown = function () {
                         html.push(_str.replace(/AMS_FLAG_ELSE/, '} else {'));
                     } else if (_str === 'AMS_FLAG_ENDIF') {
                         html.push(_str.replace(/AMS_FLAG_ENDIF/gm, '}'));
-                    } else if (/AMS_FLAG_EACHAMS_OPERATION_SUCCESS/.test(str)) {
+                    } else if (/AMS_FLAG_EACHAMS_OPERATION_SUCCESS/.test(_str)) {
                         html.push(_str.replace(/AMS_FLAG_EACHAMS_OPERATION_SUCCESS--(.+?)--AMS_OPERATION_SUCCESS/, 'json.forEach(function($1){ '));
-                    } else if (/AMS_FLAG_ENDEACH/.test(_str)) {
+                    } else if (_str === 'AMS_FLAG_ENDEACH') {
                         html.push(_str.replace(/AMS_FLAG_ENDEACH/gm, '});'));
                     }
                 } else {
