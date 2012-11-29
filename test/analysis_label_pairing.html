@@ -33,9 +33,12 @@
 <p></p>
 <textarea id="test" cols="60" rows="10">
     <h1>测试</h1>
-
+    #each(a>123)
+    <p>123123</p>
+    #end
     <h2 class="#if(1>2)A#elseif(2>3)B#elseif(2>1)C#elseD#end"></h2>
     <ul>
+
         #if(1>0)不参与运算()测()试
         <li>一大于零</li>
         #elseif(2>1)
@@ -285,7 +288,8 @@ document.getElementById('test').onkeydown = function () {
                     '(' +
                     OPEN_IF[0] + '--(?:.+?)--' + CLOSE_IF + '|' +
                     OPEN_IF[1] + '--(?:.+?)--' + CLOSE_IF + '|' +
-                    'AMS_FLAG_ELSE|AMS_FLAG_ENDIF)', 'gm');
+                    'AMS_FLAG_EACHAMS_OPERATION_SUCCESS' + '--(?:.+?)--' + CLOSE_IF + '|' +
+                    'AMS_FLAG_ELSE|AMS_FLAG_ENDIF|AMS_FLAG_ENDEACH)', 'gm');
 
             //检查IF标签配对
             str.split(IF_FLAG).forEach(function (_str, i, arr) {
@@ -294,23 +298,20 @@ document.getElementById('test').onkeydown = function () {
                         html.push(_str.replace(/AMS_FLAG_IFAMS_OPERATION_SUCCESS--(.+?)--AMS_OPERATION_SUCCESS/g, 'if $1 {'));
                     } else if (/AMS_FLAG_ELSEIFAMS_OPERATION_SUCCESS/.test(_str)) {
                         html.push(_str.replace(/AMS_FLAG_ELSEIFAMS_OPERATION_SUCCESS--(.+?)--AMS_OPERATION_SUCCESS/, '} else if $1 { '));
-                    }
-                    if (_str === 'AMS_FLAG_ELSE') {
+                    } else if (_str === 'AMS_FLAG_ELSE') {
                         html.push(_str.replace(/AMS_FLAG_ELSE/, '} else {'));
-                    }
-                    if (_str === 'AMS_FLAG_ENDIF') {
+                    } else if (_str === 'AMS_FLAG_ENDIF') {
                         html.push(_str.replace(/AMS_FLAG_ENDIF/gm, '}'));
+                    } else if (/AMS_FLAG_EACHAMS_OPERATION_SUCCESS/.test(str)) {
+                        html.push(_str.replace(/AMS_FLAG_EACHAMS_OPERATION_SUCCESS--(.+?)--AMS_OPERATION_SUCCESS/, 'json.forEach(function($1){ '));
+                    } else if (/AMS_FLAG_ENDEACH/.test(_str)) {
+                        html.push(_str.replace(/AMS_FLAG_ENDEACH/gm, '});'));
                     }
                 } else {
                     html.push('AMS_RENDER.push("' + _str + '")');
                 }
                 html.push('\r\n');
                 if (i === arr.length - 1) html.push('AMS_RENDER.push("\\r\\n");');
-            });
-
-            //检查EACH标签配对
-            str.split(/(AMS_FLAG_EACHAMS_OPERATION_SUCCESS--(?:.+?)--AMS_OPERATION_SUCCESS|AMS_FLAG_ENDEACH)/gm).forEach(function (str, i, arr) {
-                console.log(str);
             });
 
             html.push('\r\n');
