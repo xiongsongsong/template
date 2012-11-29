@@ -28,7 +28,7 @@
 </head>
 <body>
 
-<h1>Analysis label pairing todo:逐行解析并还原为JS模板</h1>
+<h1>Analysis label pairing</h1>
 
 <p></p>
 <textarea id="test" cols="60" rows="10">
@@ -270,7 +270,7 @@ document.getElementById('test').onkeydown = function () {
         }
 
         //开始转换为JS
-        bValue.split(/[\r\n]/).forEach(function (str) {
+        bValue.split(/[\r\n]/).forEach(function (str2) {
 
             //检查IF标签配对
             var OPEN_IF = [
@@ -288,16 +288,18 @@ document.getElementById('test').onkeydown = function () {
                     'AMS_FLAG_ELSE|AMS_FLAG_ENDIF)', 'gmi');
 
             //检查Each标签配对
-            str.split(IF_FLAG).forEach(function (str, i, arr) {
+            str2.split(IF_FLAG).forEach(function (str, i, arr) {
                 if (IF_FLAG.test(str)) {
-                    if (str.indexOf('AMS_FLAG_IFAMS_OPERATION_SUCCESS') > -1) {
-                        html.push(str.replace(/AMS_FLAG_IFAMS_OPERATION_SUCCESS--(.+)--AMS_OPERATION_SUCCESS/g, 'if($1){'));
-                    } else if (str.indexOf('AMS_FLAG_ELSEIFAMS_OPERATION_SUCCESS' > -1)) {
-                        html.push(str.replace(/AMS_FLAG_ELSEIFAMS_OPERATION_SUCCESS--(.+)--AMS_OPERATION_SUCCESS/, '} else if ($1){ '));
-                    } else if (str.indexOf('AMS_FLAG_ELSE') > -1) {
-                        html.push('} else {');
-                    } else if (str.indexOf('AMS_FLAG_ENDIF')) {
-                        html.push('}');
+                    if (/AMS_FLAG_IFAMS_OPERATION_SUCCESS/.test(str)) {
+                        html.push(str.replace(/AMS_FLAG_IFAMS_OPERATION_SUCCESS--(.*?)--AMS_OPERATION_SUCCESS/g, 'if $1 {'));
+                    } else if (/AMS_FLAG_ELSEIFAMS_OPERATION_SUCCESS/.test(str)) {
+                        html.push(str.replace(/AMS_FLAG_ELSEIFAMS_OPERATION_SUCCESS--(.*?)--AMS_OPERATION_SUCCESS/, '} else if $1 { '));
+                    }
+                    if (str === 'AMS_FLAG_ELSE') {
+                        html.push(str.replace(/AMS_FLAG_ELSE/, '} else {'));
+                    }
+                    if (str === 'AMS_FLAG_ENDIF') {
+                        html.push(str.replace(/AMS_FLAG_ENDIF/gm, '}'));
                     }
                 } else {
                     html.push('AMS_RENDER.push("' + str + '")');
