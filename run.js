@@ -21,6 +21,7 @@ app.configure(function () {
     app.use(express.methodOverride());
     app.use(app.router);
     app.use(express.static(__dirname + '/assets'));
+    app.use(express.static(__dirname + '/test'));
     app.use(express.static(__dirname + '/cache'));
     app.use(express.static(__dirname + '/demo'));
     app.use(express.static(__dirname + '/web'));

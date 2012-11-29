@@ -15,7 +15,7 @@
             display: inline-block;
             width: 31%;
             vertical-align: top;
-            height: 1200px;
+            height: 300px;
             border: solid 1px #aaa;
             background: #333;
             color: #fff;
@@ -53,11 +53,11 @@
     #end
 </textarea>
 
-<textarea id="b">
+<textarea id="b" style="width: 20%">
 
 </textarea>
 
-<textarea id="c">
+<textarea id="c" style="width: 100%">
 
 </textarea>
 <script>
@@ -266,7 +266,36 @@ document.getElementById('test').onkeydown = function () {
 
         //开始转换为JS
         bValue.split(/[\r\n]/).forEach(function (str) {
-            html.push(str);
+
+            //检查IF标签配对
+            var OPEN_IF = [
+                'AMS_FLAG_IFAMS_OPERATION_SUCCESS',
+                'AMS_FLAG_ELSEIFAMS_OPERATION_SUCCESS',
+                'AMS_FLAG_ELSE',
+                'AMS_FLAG_ENDIF'
+            ];
+
+            var CLOSE_IF = 'AMS_OPERATION_SUCCESS';
+            var IF_FLAG = new RegExp('' +
+                    '(' +
+                    OPEN_IF[0] + '--(?:.+?)--' + CLOSE_IF + '|' +
+                    OPEN_IF[1] + '--(?:.+?)--' + CLOSE_IF + '|' +
+                    'AMS_FLAG_ELSE|AMS_FLAG_ENDIF)', 'gmi');
+            //检查Each标签配对
+
+            var tempHTML = [];
+
+            str.split(IF_FLAG).forEach(function (str) {
+                if (IF_FLAG.test(str)) {
+                    if (str.indexOf(OPEN_IF[0]) > -1) {
+
+                    }elseif(str.indexOf(OPEN_IF[1])>-1)
+                } else {
+                    tempHTML.push(str);
+                }
+            });
+
+            console.log(tempHTML.join('\r\n'));
         });
 
         c.value = html.join('\r\n');
