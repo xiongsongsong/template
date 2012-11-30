@@ -32,8 +32,8 @@
 
 <p></p>
 <textarea id="test" cols="60" rows="10">
-    <h1>测试</h1>
-    #each(a>123) <p>123123</p> #end
+    <h1>测试#{name.toString()}</h1>
+    #each(item in $customList) <p>123123</p> #end
     <h2 class="#if(1>2)A#elseif(2>3)B#elseif(2>1)C#elseD#end"></h2>
     <ul>
 
@@ -45,6 +45,7 @@
         #else
         <li>最后的分支</li>
         #end
+        '\\\"'''"""'''\\'\/\/\'\'''""'|/\/\''"''\'''\\""""'""''"\\'\/\/\\'"|?|&*^&*)YIOGHOUSD(&
     </ul>
     <p>#{length}</p>
 
@@ -84,6 +85,13 @@ function temporaryProtection(value) {
     //转换JS代码块
     value = value.replace(/#js([\s\S]*?)#end/gm, 'AMS_FLAG_JS$1AMS_FLAG_ENDJS');
 
+    return value
+}
+
+function revertProtection(value) {
+    commentFlag.forEach(function (o) {
+        value = value.replace(o[1], o[2])
+    });
     return value
 }
 
@@ -162,8 +170,8 @@ function translateIF(value) {
     //接下来分析模板
     function replaceEcho(_value) {
         var re = /[\\]+#\{([^}]+)\}/gm;
-        value = _value.replace(re, '{{AmsVariableCommentStart--$1--AmsVariableCommentEnd');
-        value = value.replace(/#\{([^}]+)\}/gm, '{{AmsVariableStart--$1--AmsVariableEnd}}')
+        value = _value.replace(re, 'AMS_VARIABLE_COMMENT_START--$1--AMS_VARIABLE_COMMENT_END');
+        value = value.replace(/#\{([^}]+)\}/gm, 'AMS_PLACEHOLDER_START--$1--AMS_PLACEHOLDER_END')
     }
 
     replaceEcho(value);
@@ -174,7 +182,7 @@ function translateIF(value) {
 //寻找变量值
 function transportOperation(value) {
 
-    var re = /(AMS_FLAG_IF|AMS_FLAG_ELSEIF|AMS_FLAG_EACH){1}(.*?)(?=AMS_FLAG_ELSEIF|AMS_FLAG_ELSE|AMS_FLAG_ENDIF|AMS_FLAG_ENDEACH|[\r\n])/gm;
+    var re = /(AMS_FLAG_IF|AMS_FLAG_ELSEIF){1}(.*?)(?=AMS_FLAG_ELSEIF|AMS_FLAG_ELSE|AMS_FLAG_ENDIF|[\r\n])/gm;
 
     value = value.replace(re, '$1AMS_OPERATION--$2--AMS_OPERATION');
 
@@ -224,7 +232,7 @@ function transportVar(value) {
             var strTrim = str.trim();
             if (strTrim.indexOf('\\') !== 0) {
                 var isHasSemicolon = strTrim.substring(strTrim.length - 1) === ';';
-                value = value.replace(strTrim, 'AmsVarStart--' + strTrim.substring(1) + (isHasSemicolon ? '' : ';') + '--AmsVarEnd');
+                value = value.replace(strTrim, 'AMS_VAR_START' + strTrim.substring(1) + (isHasSemicolon ? '' : ';') + 'AMS_VAR_END');
             }
         });
     }
@@ -260,8 +268,13 @@ document.getElementById('test').onkeydown = function () {
         bValue = transportJS(bValue);
         //捕获#IF  #EACH后方的变量，并判断正确性
         bValue = transportOperation(bValue);
+
         //捕获变量声明
         bValue = transportVar(bValue);
+
+        //还原注释标志
+        bValue = revertProtection(bValue);
+
 
         if (/AMS_OPERATION--/gm.test(bValue)) {
             alert('语法不正确，请检查');
@@ -283,19 +296,21 @@ document.getElementById('test').onkeydown = function () {
                 '(' +
                 OPEN_IF[0] + '--(?:.+?)--' + CLOSE_IF + '|' +
                 OPEN_IF[1] + '--(?:.+?)--' + CLOSE_IF + '|' +
-                'AMS_FLAG_EACHAMS_OPERATION_SUCCESS' + '--(?:.+?)--' + CLOSE_IF + '|' +
+                'AMS_FLAG_EACH(?:\\([^)]+?\\))|' +
+                'AMS_PLACEHOLDER_START' + '--(?:.+?)--' + 'AMS_PLACEHOLDER_END' + '|' +
+                'AMS_FLAG_JS(?:.+?)AMS_FLAG_ENDJS' + '|' +
+                'AMS_VAR_START(?:var.+)AMS_VAR_END' + '|' +
                 'AMS_FLAG_ELSE|AMS_FLAG_ENDIF|AMS_FLAG_ENDEACH)', 'gm');
 
         //开始转换为JS
         bValue.split(/[\r\n]/).forEach(function (str) {
-
-
 
             //检查IF标签配对
 
             str.split(IF_FLAG).forEach(function (_str, i, arr) {
 
                 if (IF_FLAG.test(_str)) {
+                    //匹配IF语句
                     if (/AMS_FLAG_IFAMS_OPERATION_SUCCESS/.test(_str)) {
                         html.push(_str.replace(/AMS_FLAG_IFAMS_OPERATION_SUCCESS--(.+?)--AMS_OPERATION_SUCCESS/g, 'if $1 {'));
                     } else if (/AMS_FLAG_ELSEIFAMS_OPERATION_SUCCESS/.test(_str)) {
@@ -304,15 +319,29 @@ document.getElementById('test').onkeydown = function () {
                         html.push(_str.replace(/AMS_FLAG_ELSE/, '} else {'));
                     } else if (_str === 'AMS_FLAG_ENDIF') {
                         html.push(_str.replace(/AMS_FLAG_ENDIF/gm, '}'));
-                    } else if (/AMS_FLAG_EACHAMS_OPERATION_SUCCESS/.test(_str)) {
-                        html.push(_str.replace(/AMS_FLAG_EACHAMS_OPERATION_SUCCESS--(.+?)--AMS_OPERATION_SUCCESS/, 'json.forEach(function($1){ '));
+                    }
+                    //匹配Each语句
+                    else if (/AMS_FLAG_EACH/.test(_str)) {
+                        html.push(_str.replace(/AMS_FLAG_EACH\((.+)[\s]+in[\s]+([^\s]+)\)/, '$2.forEach(function($1){ '));
                     } else if (_str === 'AMS_FLAG_ENDEACH') {
                         html.push(_str.replace(/AMS_FLAG_ENDEACH/gm, '});'));
                     }
+                    //匹配占位符
+                    else if (/AMS_PLACEHOLDER_START/.test(_str)) {
+                        html.push(_str.replace(/AMS_PLACEHOLDER_START--(.+?)--AMS_PLACEHOLDER_END/, 'AMS_ECHO($1);'));
+                    }
+                    //匹配JS语句
+                    else if (/AMS_FLAG_JS/.test(_str)) {
+                        _str.match(/AMS_FLAG_JS(.+?)AMS_FLAG_ENDJS/);
+                        html.push(_str.replace(/AMS_FLAG_JS(.+?)AMS_FLAG_ENDJS/, '(function(){\r\n' + decodeURIComponent(RegExp.$1) + '\r\n})();'));
+                    }//匹配VAR变量声明行数
+                    else if (/AMS_VAR_START/.test(_str)) {
+                        html.push(_str.replace(/AMS_VAR_START(.+?)AMS_VAR_END/, '$1'));
+                    }
                 } else {
-                    html.push('AMS_RENDER.push("' + _str + '")');
+                    if (_str.length > 0) html.push('AMS_RENDER.push("' + _str.replace(/\\/g, '\\\\').replace(/"/g, '\\"') + '");');
                 }
-                html.push('\r\n');
+                if (_str.length > 0) html.push('\r\n');
                 if (i === arr.length - 1) html.push('AMS_RENDER.push("\\r\\n");');
             });
 
