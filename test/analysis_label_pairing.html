@@ -33,7 +33,7 @@
 <p></p>
 <textarea id="test" cols="60" rows="10">
     #each(a,b in c)
-    #{name.toString()}#if(1>1)a#elseif(1>0)b#elseif(c>1)#each(a,b in c)c#end#elseif(c>2)d#else#each(d,e in f)#jsvar
+    #{name.toString()}#if(1>1)a#elseif(1>0)b#elseif(c>1)#each(a,b in c)c#end#elseif(c>2)d#else#each(d,e in f)ccc#if(a)d#elseif(c)d#end#jsvar
     a=last#end#end#end
 
     <h1>测试#{name.toString()}</h1>

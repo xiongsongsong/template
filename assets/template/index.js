@@ -134,7 +134,7 @@
         //首先靠猜测
         if (operation) {
             operation.forEach(function (item) {
-                var source = item.match(amsOperation);
+                item.match(amsOperation);
                 var $1 = RegExp.$1;
                 //首先查询最右侧括号
                 var rightEnd = $1.lastIndexOf(')');
@@ -168,7 +168,7 @@
         var match = value.match(_jsRe);
         if (match) {
             match.forEach(function (str) {
-                var v = str.match(_jsRe);
+                str.match(_jsRe);
                 var $1 = RegExp.$1;
                 value = value.replace(str, 'AMS_FLAG_JS' + encodeURIComponent($1) + 'AMS_FLAG_ENDJS');
             });
