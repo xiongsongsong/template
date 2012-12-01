@@ -6,16 +6,19 @@
  * To change this template use File | Settings | File Templates.
  */
 
-define('template', function (require, exports, module) {
+(function () {
 
-    var commentFlag = [
+    'use strict';
+
+    var placeholderFlag = [
         [/\\#if/gm , 'AMS_IF_COMMENT' , '\\#if'],
         [/\\#elseif/gm , 'AMS_ELSEIF_COMMENT' , '\\#elseif'],
         [/\\#else/gm , 'AMS_ELSE_COMMENT' , '\\#else'],
         [/\\#each/gm , 'AMS_EACH_COMMENT' , '\\#each'],
         [/\\#end/gm , 'AMS_END_COMMENT' , '\\#end'],
         [/\\#var/gm , 'AMS_VAR_COMMENT' , '\\#var'],
-        [/\\#js/gm , 'AMS_JS_COMMENT' , '\\#js']
+        [/\\#js/gm , 'AMS_JS_COMMENT' , '\\#js'],
+        [/\$/gmi, 'AMS_JS_REGEXP', '$']
     ];
 
 
@@ -23,28 +26,27 @@ define('template', function (require, exports, module) {
      * Javascript code fragment
      *
      * */
-    function temporaryProtection(value) {
+    function temporaryProtection(tpl) {
 
-        commentFlag.forEach(function (o) {
-            value = value.replace(o[0], o[1])
+        placeholderFlag.forEach(function (o) {
+            tpl = tpl.replace(o[0], o[1])
         });
 
         //转换JS代码块
-        value = value.replace(/#js([\s\S]*?)#end/gm, 'AMS_FLAG_JS$1AMS_FLAG_ENDJS');
+        tpl = tpl.replace(/#js([\s\S]*?)#end/gm, 'AMS_FLAG_JS$1AMS_FLAG_ENDJS');
 
-        return value
+        return tpl
     }
 
     function revertProtection(value) {
-        commentFlag.forEach(function (o) {
+        placeholderFlag.forEach(function (o) {
             value = value.replace(o[1], o[2])
         });
         return value
     }
 
-    //替换#if  #end 之间的elseif 和 #else
+//替换#if  #end 之间的elseif 和 #else
     function replaceElse(str) {
-
         str = str.replace(/#(elseif)[\s]*(\([^)]+\)){1}/gm, 'AMS_FLAG_ELSEIF$2');
         str = str.replace(/#else/gm, 'AMS_FLAG_ELSE');
         //Revert TEMPBLOCK
@@ -52,92 +54,83 @@ define('template', function (require, exports, module) {
         return str;
     }
 
-    //RegExp object does not support lookbehind
-    //so with the code below
-    function translateIF(value) {
+//RegExp object does not support lookbehind
+//so with the code below
+    function translateIF(tpl) {
 
-        var IFANDEACH = /(#if|#each)(\s*\(.+\)){1}/gm;
+        tpl = temporaryProtection(tpl);
 
-        //首先
-        value = temporaryProtection(value);
-
-        var tempValue = value;
+        var flag = ['#if', '#each', '#js'];
+        var flagRe = /#(if|each|js)/gm;
+        var flagPart = /(?:#if|#each|#js)([\s\S]+?)#end/gm;
 
         function _translateIf() {
-            var allIf = tempValue.match(IFANDEACH);
+            if (!/#end/.test(tpl)) return;
+            var _tpl = tpl.substring(0, tpl.indexOf('#end') + 4);
 
-            if (!allIf) return;
-
-            //query first #if
-            var point = tempValue.indexOf(allIf[0]);
-
-            //as the starting point of the first interception string
-            tempValue = tempValue.substring(point + allIf[0].length);
-
-            //find the #end last place
-            var current = tempValue.match(/[\s\S]*?(#end){1}/);
-
-            //if you find the "#end"
-            if (current) {
-                //and  can not contain the "#if #each..."
-                var matchIF = current[0].match(IFANDEACH);
-                //如果片段中不再包含IF。。 或者为注释形态的IF。。，则表示为预期的片段
-                if (!matchIF) {
-                    //if not found,it proved to be correct
-                    var a = allIf[0].match(IFANDEACH);
-                    var _a = '', _b = '';
-
-                    //replaced the a full-width in order to avoid duplication find
-                    if (RegExp.$1 === '#if') {
+            var _str = '';
+            if (flagRe.test(_tpl)) {
+                var point = [];
+                flag.forEach(function (s) {
+                    var _p = _tpl.lastIndexOf(s);
+                    if (_p > -1) point.push(_p)
+                });
+                _tpl = _tpl.substring(Math.max.apply(null, point));
+                flagRe.test(_tpl);
+                var c = _tpl.match(flagRe);
+                var $1 = c[0].substring(1);
+                var _a = '', _b = '';
+                switch ($1) {
+                    case "if":
                         _a = 'AMS_FLAG_IF';
-                        _b = 'AMS_FLAG_ENDIF'
-                    } else if (RegExp.$1 == '#each') {
+                        _b = 'AMS_FLAG_ENDIF';
+                        break;
+                    case "each":
                         _a = 'AMS_FLAG_EACH';
-                        _b = 'AMS_FLAG_ENDEACH'
-                    } else if (RegExp.$1 == '#js') {
+                        _b = 'AMS_FLAG_ENDEACH';
+                        break;
+                    case "js":
                         _a = 'AMS_FLAG_JS';
-                        _b = 'AMS_FLAG_ENDJS'
-                    }
-
-                    var replaceStr = _a + RegExp.$2 + current[0].substring(0, current[0].lastIndexOf('#end')) + _b;
-                    if (RegExp.$1 === '#if') replaceStr = replaceElse(replaceStr);
-                    //Find if  else  end
-                    value = value.replace(allIf[0] + current[0], replaceStr);
-                    //repeat find
-                    tempValue = value;
+                        _b = 'AMS_FLAG_ENDJS';
+                        break;
                 }
+                _str = _tpl.replace(flagPart, _a + '$1' + _b);
+                if ($1 === 'if') _str = replaceElse(_str);
+                tpl = tpl.replace(_tpl, _str);
+            } else {
+                _str = _tpl.substring(0, _tpl.length - 4) + 'AMS_UNOPENED_END';
+                tpl = tpl.replace(_tpl, _str);
             }
-
             _translateIf();
         }
-
 
         _translateIf();
 
         //接下来分析模板
+        //TODO:是否可以移动到外部
         function replaceEcho(_value) {
             var re = /[\\]+#\{([^}]+)\}/gm;
-            value = _value.replace(re, 'AMS_VARIABLE_COMMENT_START--$1--AMS_VARIABLE_COMMENT_END');
-            value = value.replace(/#\{([^}]+)\}/gm, 'AMS_PLACEHOLDER_START--$1--AMS_PLACEHOLDER_END')
+            tpl = _value.replace(re, 'AMS_VARIABLE_COMMENT_START--$1--AMS_VARIABLE_COMMENT_END');
+            tpl = tpl.replace(/#\{([^}]+)\}/gm, 'AMS_PLACEHOLDER_START--$1--AMS_PLACEHOLDER_END')
         }
 
-        replaceEcho(value);
+        replaceEcho(tpl);
 
-        return value;
+        return tpl;
     }
 
 //寻找变量值
-    function transportOperation(value) {
+    function transportOperation(tpl) {
 
-        var re = /(AMS_FLAG_IF|AMS_FLAG_ELSEIF){1}(.*?)(?=AMS_FLAG_ELSEIF|AMS_FLAG_ELSE|AMS_FLAG_ENDIF|[\r\n])/gm;
+        var re = /(AMS_FLAG_IF|AMS_FLAG_ELSEIF){1}(.*?)(?=AMS_FLAG_ELSEIF|AMS_FLAG_ELSE|AMS_FLAG_ENDIF|AMS_FLAG_EACH|AMS_FLAG_ENDEACH|[\r\n])/gm;
 
-        value = value.replace(re, '$1AMS_OPERATION--$2--AMS_OPERATION');
+        tpl = tpl.replace(re, '$1AMS_OPERATION--$2--AMS_OPERATION');
 
         //开始逐一判断参数合法性
 
         var amsOperation = /AMS_OPERATION--(.*?)--AMS_OPERATION/gm;
 
-        var operation = value.match(amsOperation);
+        var operation = tpl.match(amsOperation);
         //首先靠猜测
         if (operation) {
             operation.forEach(function (item) {
@@ -148,14 +141,14 @@ define('template', function (require, exports, module) {
                 var step1 = $1.substring(0, rightEnd + 1);
                 var step1End = $1.substring(rightEnd + 1);
                 if (JSHINT('var test=' + step1.trim() + ';')) {
-                    value = value.replace('AMS_OPERATION--' + $1 + '--AMS_OPERATION', 'AMS_OPERATION_SUCCESS--' + step1 + '--AMS_OPERATION_SUCCESS' + step1End);
+                    tpl = tpl.replace('AMS_OPERATION--' + $1 + '--AMS_OPERATION', 'AMS_OPERATION_SUCCESS--' + step1 + '--AMS_OPERATION_SUCCESS' + step1End);
                 } else {
                     var _step1 = step1;
                     var i = 0;
                     var length = step1.length;
                     while (_step1.length > 1) {
                         if (JSHINT('var test=' + _step1.trim() + ';')) {
-                            value = value.replace('AMS_OPERATION--' + $1 + '--AMS_OPERATION', 'AMS_OPERATION_SUCCESS--' + _step1.trim() + '--AMS_OPERATION_SUCCESS' + step1.trim().substring(_step1.trim().length));
+                            tpl = tpl.replace('AMS_OPERATION--' + $1 + '--AMS_OPERATION', 'AMS_OPERATION_SUCCESS--' + _step1.trim() + '--AMS_OPERATION_SUCCESS' + step1.trim().substring(_step1.trim().length));
                             break;
                         }
                         _step1 = _step1.substring(0, step1.length - i);
@@ -166,25 +159,7 @@ define('template', function (require, exports, module) {
             });
         }
 
-        return value;
-    }
-
-//转换var关键字
-    function transportVar(value) {
-        var re = /^[\s]*[\\]*#var(.*)$/gm;
-        value = value.replace(/^([^\r\n\S]*?)\\([\\]*)#(var(?:.*)+)*$/gm, 'AmsVarCommentStart--$1$2#$3--AmsVarCommentEnd');
-        var match = value.match(re);
-        if (match) {
-            match.forEach(function (str) {
-                var strTrim = str.trim();
-                if (strTrim.indexOf('\\') !== 0) {
-                    var isHasSemicolon = strTrim.substring(strTrim.length - 1) === ';';
-                    value = value.replace(strTrim, 'AMS_VAR_START' + strTrim.substring(1) + (isHasSemicolon ? '' : ';') + 'AMS_VAR_END');
-                }
-            });
-        }
-
-        return value;
+        return tpl;
     }
 
 //转换JS代码块
@@ -203,22 +178,17 @@ define('template', function (require, exports, module) {
 
     function render(value) {
 
-        var bValue = translateIF(value);
-
+        var tpl = translateIF(value);
         var html = [];
 
-        bValue = transportJS(bValue);
+        tpl = transportJS(tpl);
 
-        bValue = transportOperation(bValue);
+        tpl = transportOperation(tpl);
 
-        bValue = transportVar(bValue);
+        tpl = revertProtection(tpl);
 
-        bValue = revertProtection(bValue);
-
-        if (/AMS_OPERATION--/gm.test(bValue)) {
-            throw('Syntax Error')
-        } else {
-            c.value = bValue;
+        if (/AMS_OPERATION--/gm.test(tpl)) {
+            //throw('Syntax Error')
         }
 
         //检查IF标签配对
@@ -239,7 +209,7 @@ define('template', function (require, exports, module) {
             'AMS_FLAG_ELSE|AMS_FLAG_ENDIF|AMS_FLAG_ENDEACH)', 'gm');
 
         //开始转换为JS
-        bValue.split(/[\r\n]/).forEach(function (str) {
+        tpl.split(/[\r\n]/).forEach(function (str) {
 
             //检查IF标签配对
 
@@ -288,6 +258,11 @@ define('template', function (require, exports, module) {
 
     }
 
-    exports.render = render;
-
-});
+    if (typeof define === 'function') {
+        define('template', function (require, exports, module) {
+            exports.render = render;
+        })
+    } else {
+        window.render = render;
+    }
+})();

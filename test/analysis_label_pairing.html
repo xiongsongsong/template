@@ -13,7 +13,7 @@
 
         pre, textarea {
             display: inline-block;
-            width: 31%;
+            width: 100%;
             vertical-align: top;
             height: 300px;
             border: solid 1px #aaa;
@@ -32,6 +32,9 @@
 
 <p></p>
 <textarea id="test" cols="60" rows="10">
+    #each(d,e in f)#{name.toString()}#if(1>1)a#elseif(1>0)b#elseif(c>1)#each(a,b in c)c#end#elseif(c>2)d#else#each(d,e in f)#jsvar
+    a=last#end#end#end#end
+    222222222
     <h1>测试#{name.toString()}</h1>
     #each(item in $customList) <p>123123</p> #end
     <h2 class="#if(1>2)A#elseif(2>3)B#elseif(2>1)C#elseD#end"></h2>
@@ -55,6 +58,9 @@
     #end
 </textarea>
 
+<h1>测试#{name.toString()}</h1>
+#each(item in $customList) <p>123123</p> #end
+<h2 class="#if(1>2)A#elseif(2>3)B#elseif(2>1)C#elseD#end"></h2>
 <textarea id="c" style="width: 100%">
 
 </textarea>

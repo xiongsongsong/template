@@ -13,6 +13,7 @@ define(function (require, exports, module) {
     document.getElementById('test').onkeydown = function () {
         var self = this;
         setTimeout(function () {
+
             c.value = template.render(self.value);
         }, 0)
     }
