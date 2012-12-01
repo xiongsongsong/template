@@ -122,7 +122,7 @@
 //寻找变量值
     function transportOperation(tpl) {
 
-        var re = /(AMS_FLAG_IF|AMS_FLAG_ELSEIF){1}(.*?)(?=AMS_FLAG_ELSEIF|AMS_FLAG_ELSE|AMS_FLAG_ENDIF|AMS_FLAG_EACH|AMS_FLAG_ENDEACH|[\r\n])/gm;
+        var re = /(AMS_FLAG_IF|AMS_FLAG_ELSEIF){1}(.*?)(?=AMS_FLAG_ELSEIF|AMS_FLAG_ELSE|AMS_FLAG_ENDIF|AMS_FLAG_EACH|AMS_FLAG_JS|[\r\n])/gm;
 
         tpl = tpl.replace(re, '$1AMS_OPERATION--$2--AMS_OPERATION');
 
@@ -266,3 +266,4 @@
         window.render = render;
     }
 })();
+
