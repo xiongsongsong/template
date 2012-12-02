@@ -42,7 +42,6 @@
         placeholderFlag.forEach(function (o) {
             tpl = tpl.replace(o[1], o[2])
         });
-        console.log(tpl);
         return tpl
     }
 
@@ -108,7 +107,6 @@
         _translateIf();
 
         //接下来分析模板
-        //TODO:是否可以移动到外部
         function replaceEcho(_value) {
             var re = /[\\]+#\{([^}]+)\}/gm;
             tpl = _value.replace(re, 'AMS_VARIABLE_COMMENT_START--$1--AMS_VARIABLE_COMMENT_END');
@@ -177,10 +175,19 @@
         return value;
     }
 
-    function render(value) {
+
+    function render(value, data) {
 
         var tpl = translateIF(value);
-        var html = [];
+        var html = ['var AMS_RENDER=[];\r\n', 'function echo(s){AMS_RENDER.push(s)}\r\n'];
+        html.push('var AMS_DATA=' + '' + JSON.stringify(data) + ';\r\n');
+        for (var k in data) {
+            if (data.hasOwnProperty(k)) {
+                html.push('var ' + k + ';\r\n');
+                html.push(k + '=AMS_DATA["' + k + '"];\r\n');
+            }
+        }
+
 
         tpl = transportJS(tpl);
 
@@ -235,7 +242,7 @@
                     }
                     //匹配占位符
                     else if (/AMS_PLACEHOLDER_START/.test(_str)) {
-                        html.push(_str.replace(/AMS_PLACEHOLDER_START--(.+?)--AMS_PLACEHOLDER_END/, 'AMS_ECHO($1);'));
+                        html.push(_str.replace(/AMS_PLACEHOLDER_START--(.+?)--AMS_PLACEHOLDER_END/, 'echo($1);'));
                     }
                     //匹配JS语句
                     else if (/AMS_FLAG_JS/.test(_str)) {
@@ -255,6 +262,8 @@
             html.push('\r\n');
         });
 
+        html.push("AMS_RENDER.join('');");
+        console.log(eval(html.join('')));
         return html.join('');
 
     }

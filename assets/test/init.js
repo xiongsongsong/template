@@ -14,7 +14,7 @@ define(function (require, exports, module) {
         var self = this;
         setTimeout(function () {
 
-            c.value = template.render(self.value);
+            c.value = template.render(self.value, {name:"蝴蝶", age:"28", love:['友情', '亲情', '爱情']});
         }, 0)
     }
 

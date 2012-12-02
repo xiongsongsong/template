@@ -32,36 +32,17 @@
 
 <p></p>
 <textarea id="test" cols="60" rows="10">
-    #each(a,b in c)
-    #{name.toString()}#if(1>1)a#elseif(1>0)b#elseif(c>1)#each(a,b in c)c#end#elseif(c>2)d#else#each(d,e in f)ccc#if(a)d#elseif(c)d#end#jsvar
-    a=last#end#end#end
-
-    <h1>测试#{name.toString()}</h1>
-    #each(item in $customList) <p>123123</p> #end
-    <h2 class="#if(1>2)A#elseif(2>3)B#elseif(2>1)C#elseD#end"></h2>
-    <ul>
-
-        #if(1>0)不参与运算()测()试
-        <li>一大于零</li>
-        #elseif(2>1)
-        1\#elseif(111>111)2
-        <li>二大于一</li>
-        #else
-        <li>最后的分支</li>
-        #end
-        '\\\"'''"""'''\\'\/\/\'\'''""'|/\/\''"''\'''\\""""'""''"\\'\/\/\\'"|?|&*^&*)YIOGHOUSD(&
-    </ul>
-    <p>#{length}</p>
-
+    <h1>#{name}</h1>
     #js
-    var a=123;
-    var c=123;
-    #end #end
+    var a='xiongwan';
+    echo (a);
+    echo("自定义变量");
+    #end
+    #each(item,index in love)
+    <li>#{item+'|'+index+'|'+item.length}</li>
+    #end
 </textarea>
 
-<h1>测试#{name.toString()}</h1>
-#each(item in $customList) <p>123123</p> #end
-<h2 class="#if(1>2)A#elseif(2>3)B#elseif(2>1)C#elseD#end"></h2>
 <textarea id="c" style="width: 100%">
 
 </textarea>
