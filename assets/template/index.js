@@ -11,14 +11,14 @@
     'use strict';
 
     var placeholderFlag = [
-        [/\\#if/gm , 'AMS_IF_COMMENT' , '\\#if'],
-        [/\\#elseif/gm , 'AMS_ELSEIF_COMMENT' , '\\#elseif'],
-        [/\\#else/gm , 'AMS_ELSE_COMMENT' , '\\#else'],
-        [/\\#each/gm , 'AMS_EACH_COMMENT' , '\\#each'],
-        [/\\#end/gm , 'AMS_END_COMMENT' , '\\#end'],
-        [/\\#var/gm , 'AMS_VAR_COMMENT' , '\\#var'],
-        [/\\#js/gm , 'AMS_JS_COMMENT' , '\\#js'],
-        [/\$/gmi, 'AMS_JS_REGEXP', '$']
+        [/\\#if/gm , /AMS_IF_COMMENT/gm , '\\#if'],
+        [/\\#elseif/gm , /AMS_ELSEIF_COMMENT/gm , '\\#elseif'],
+        [/\\#else/gm , /AMS_ELSE_COMMENT/gm , '\\#else'],
+        [/\\#each/gm , /AMS_EACH_COMMENT/gm , '\\#each'],
+        [/\\#end/gm , /AMS_END_COMMENT/gm , '\\#end'],
+        [/\\#var/gm , /AMS_VAR_COMMENT/gm , '\\#var'],
+        [/\\#js/gm , /AMS_JS_COMMENT/gm , '\\#js'],
+        [/\$/gmi, /AMS_RE/gm, '$']
     ];
 
 
@@ -29,7 +29,7 @@
     function temporaryProtection(tpl) {
 
         placeholderFlag.forEach(function (o) {
-            tpl = tpl.replace(o[0], o[1])
+            tpl = tpl.replace(o[0], o[1].source)
         });
 
         //转换JS代码块
@@ -38,11 +38,12 @@
         return tpl
     }
 
-    function revertProtection(value) {
+    function revertProtection(tpl) {
         placeholderFlag.forEach(function (o) {
-            value = value.replace(o[1], o[2])
+            tpl = tpl.replace(o[1], o[2])
         });
-        return value
+        console.log(tpl);
+        return tpl
     }
 
 //替换#if  #end 之间的elseif 和 #else
