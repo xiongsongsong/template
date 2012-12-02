@@ -150,12 +150,15 @@
     function render(value, data) {
 
         var tpl = translateIF(value);
-        var html = ['var AMS_RENDER=[];\r\n', 'function echo(s){AMS_RENDER.push(s)}\r\n'];
+        var html = [
+            '(function(){ \r\n "use strict";\r\n',
+            'var AMS_RENDER=[];\r\n',
+            'function echo(s){AMS_RENDER.push(s);}\r\n'
+        ];
         html.push('var AMS_DATA=' + '' + JSON.stringify(data) + ';\r\n');
         for (var k in data) {
             if (data.hasOwnProperty(k)) {
-                html.push('var ' + k + ';\r\n');
-                html.push(k + '=AMS_DATA["' + k + '"];\r\n');
+                html.push('var ' + k + ' = AMS_DATA.' + k + ';\r\n');
             }
         }
 
@@ -214,9 +217,15 @@
                             var match = _str.match(forEachRe);
                             var $1 = match[1].split(',');
                             var $2 = match[2];
-                            var i = $1.length === 2 ? $1[1] : 'index';
-                            return '(function(){\r\nfor(var ' + i + '=0;' + i + '<' + $2 + '.length;' + i + '++){\r\n' +
-                                'var ' + $1[0] + '=' + $2 + '[' + i + '];';
+                            var i = $1.length > 1 ? $1[1] : 'index';
+
+                            var arr = $1[2] ? $1[2] : $2;
+                            //模拟ES5 中forEach的参数定义
+                            return '(function(){\r\n' +
+                                //如果存在forEach中第3个形参
+                                ($1[2] ? 'var ' + $1[2] + '=' + $2 + ';' : '') + '\r\n' +
+                                'for(var ' + i + '=0;' + i + '<' + arr + '.length;' + i + '++){\r\n' +
+                                'var ' + $1[0] + '=' + arr + '[' + i + '];\r\n';
 
                         }));
                     } else if (_str === 'AMS_FLAG_ENDEACH') {
@@ -244,7 +253,8 @@
             html.push('\r\n')
         }
 
-        html.push("AMS_RENDER.join('');");
+        html.push("return AMS_RENDER.join('');");
+        html.push('})();');
         //return html.join('');
 
         return  eval(html.join(''));
@@ -259,3 +269,5 @@
         window.render = render;
     }
 })();
+
+
