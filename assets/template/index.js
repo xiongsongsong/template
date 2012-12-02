@@ -29,9 +29,10 @@
      * */
     function temporaryProtection(tpl) {
 
-        placeholderFlag.forEach(function (o) {
+        for (var i = 0; i < placeholderFlag.length; i++) {
+            var o = placeholderFlag[i];
             tpl = tpl.replace(o[0], o[1].source)
-        });
+        }
 
         //转换JS代码块
         tpl = tpl.replace(/#js([\s\S]*?)#end/gm, 'AMS_FLAG_JS$1AMS_FLAG_ENDJS');
@@ -40,9 +41,12 @@
     }
 
     function revertProtection(tpl) {
-        placeholderFlag.forEach(function (o) {
+
+        for (var i = 0; i < placeholderFlag.length; i++) {
+            var o = placeholderFlag[i];
             tpl = tpl.replace(o[1], o[2])
-        });
+        }
+
         return tpl
     }
 
@@ -72,28 +76,27 @@
             var _str = '';
             if (flagRe.test(_tpl)) {
                 var point = [];
-                flag.forEach(function (s) {
+
+                for (var i = 0; i < flag.length; i++) {
+                    var s = flag[i];
                     var _p = _tpl.lastIndexOf(s);
                     if (_p > -1) point.push(_p)
-                });
+                }
+
                 _tpl = _tpl.substring(Math.max.apply(null, point));
                 flagRe.test(_tpl);
                 var c = _tpl.match(flagRe);
                 var $1 = c[0].substring(1);
                 var _a = '', _b = '';
-                switch ($1) {
-                    case "if":
-                        _a = 'AMS_FLAG_IF';
-                        _b = 'AMS_FLAG_ENDIF';
-                        break;
-                    case "each":
-                        _a = 'AMS_FLAG_EACH';
-                        _b = 'AMS_FLAG_ENDEACH';
-                        break;
-                    case "js":
-                        _a = 'AMS_FLAG_JS';
-                        _b = 'AMS_FLAG_ENDJS';
-                        break;
+                if ($1 == "if") {
+                    _a = 'AMS_FLAG_IF';
+                    _b = 'AMS_FLAG_ENDIF';
+                } else if ($1 == "each") {
+                    _a = 'AMS_FLAG_EACH';
+                    _b = 'AMS_FLAG_ENDEACH';
+                } else if ($1 == "js") {
+                    _a = 'AMS_FLAG_JS';
+                    _b = 'AMS_FLAG_ENDJS';
                 }
                 _str = _tpl.replace(flagPart, _a + '$1' + _b);
                 if ($1 === 'if') _str = replaceElse(_str);
@@ -133,7 +136,8 @@
         var operation = tpl.match(amsOperation);
         //首先靠猜测
         if (operation) {
-            operation.forEach(function (item) {
+            for (i = 0; i < operation.length; i++) {
+                var item = operation[i];
                 item.match(amsOperation);
                 var $1 = RegExp.$1;
                 //首先查询最右侧括号
@@ -156,7 +160,7 @@
                         i++;
                     }
                 }
-            });
+            }
         }
 
         return tpl;
@@ -167,13 +171,14 @@
         var _jsRe = /AMS_FLAG_JS([\s\S]+?)AMS_FLAG_ENDJS/gm;
         var match = value.match(_jsRe);
         if (match) {
-            match.forEach(function (str) {
+            for (var i = 0; i < match.length; i++) {
+                var str = match[i];
                 str.match(_jsRe);
                 var $1 = RegExp.$1;
                 value = value.replace(str, 'AMS_FLAG_JS' + encodeURIComponent($1) + 'AMS_FLAG_ENDJS');
-            });
+            }
         }
-        return value;
+        return value
     }
 
 
@@ -188,7 +193,6 @@
                 html.push(k + '=AMS_DATA["' + k + '"];\r\n');
             }
         }
-
 
         tpl = transportJS(tpl);
 
@@ -217,13 +221,17 @@
             'AMS_VAR_START(?:var.+)AMS_VAR_END' + '|' +
             'AMS_FLAG_ELSE|AMS_FLAG_ENDIF|AMS_FLAG_ENDEACH)', 'gm');
 
+        var forEachRe = /AMS_FLAG_EACH\((.+)(?:,)?(.+)?[\s]+in[\s]+([^\s]+)\)/;
+
         //开始转换为JS
-        tpl.split(/[\r\n]/).forEach(function (str) {
+        var _tpl = tpl.split(/[\r\n]/);
+        for (var l = 0; l < _tpl.length; l++) {
+            var str = _tpl[l];
 
             //检查IF标签配对
-
-            str.split(IF_FLAG).forEach(function (_str, i, arr) {
-
+            var arr = str.split(IF_FLAG);
+            for (var i = 0; i < arr.length; i++) {
+                var _str = arr[i];
                 if (IF_FLAG.test(_str)) {
                     //匹配IF语句
                     if (/AMS_FLAG_IFAMS_OPERATION_SUCCESS/.test(_str)) {
@@ -237,9 +245,16 @@
                     }
                     //匹配Each语句
                     else if (/AMS_FLAG_EACH/.test(_str)) {
-                        html.push(_str.replace(/AMS_FLAG_EACH\((.+)[\s]+in[\s]+([^\s]+)\)/, '$2.forEach(function($1){ '));
+                        html.push(_str.replace(forEachRe, function (_str) {
+                            var match = _str.match(forEachRe);
+                            var i = RegExp.$2.trim().length > 0 ? RegExp.$2 : 'index';
+
+                            return '(function(){\r\nfor(var ' + i + '=0;' + i + '<' + RegExp.$3 + '.length;' + i + '++){\r\n' +
+                                'var ' + RegExp.$1 + '=' + RegExp.$3 + '[' + i + '];';
+
+                        }));
                     } else if (_str === 'AMS_FLAG_ENDEACH') {
-                        html.push(_str.replace(/AMS_FLAG_ENDEACH/gm, '});'));
+                        html.push(_str.replace(/AMS_FLAG_ENDEACH/gm, '}})();'));
                     }
                     //匹配占位符
                     else if (/AMS_PLACEHOLDER_START/.test(_str)) {
@@ -258,14 +273,13 @@
                 }
                 if (_str.length > 0) html.push('\r\n');
                 if (i === arr.length - 1) html.push('AMS_RENDER.push("\\r\\n");');
-            });
+            }
 
-            html.push('\r\n');
-        });
+            html.push('\r\n')
+        }
 
         html.push("AMS_RENDER.join('');");
-        console.log(eval(html.join('')));
-        return html.join('');
+        return eval(html.join('')) + '\r\n' + html.join('');
 
     }
 
@@ -277,4 +291,3 @@
         window.render = render;
     }
 })();
-
