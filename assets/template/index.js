@@ -11,13 +11,13 @@
     'use strict';
 
     var placeholderFlag = [
-        [/\\#if/gm , /AMS_IF_COMMENT/gm , '\\#if'],
-        [/\\#elseif/gm , /AMS_ELSEIF_COMMENT/gm , '\\#elseif'],
-        [/\\#else/gm , /AMS_ELSE_COMMENT/gm , '\\#else'],
-        [/\\#each/gm , /AMS_EACH_COMMENT/gm , '\\#each'],
-        [/\\#end/gm , /AMS_END_COMMENT/gm , '\\#end'],
-        [/\\#var/gm , /AMS_VAR_COMMENT/gm , '\\#var'],
-        [/\\#js/gm , /AMS_JS_COMMENT/gm , '\\#js'],
+        [/\\#if/gm , /AMS_IF_COMMENT/gm , '#if'],
+        [/\\#elseif/gm , /AMS_ELSEIF_COMMENT/gm , '#elseif'],
+        [/\\#else/gm , /AMS_ELSE_COMMENT/gm , '#else'],
+        [/\\#each/gm , /AMS_EACH_COMMENT/gm , '#each'],
+        [/\\#end/gm , /AMS_END_COMMENT/gm , '#end'],
+        [/\\#var/gm , /AMS_VAR_COMMENT/gm , '#var'],
+        [/\\#js/gm , /AMS_JS_COMMENT/gm , '#js'],
         [/\\#\{/, /AMS_VARIABLE_COMMENT/, '#{'],
         [/\$/gmi, /AMS_RE/gm, '$']
     ];
