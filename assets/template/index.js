@@ -19,13 +19,13 @@
         [/\\#var/gm , /AMS_VAR_COMMENT/gm , '#var'],
         [/\\#js/gm , /AMS_JS_COMMENT/gm , '#js'],
         [/\\#\{/, /AMS_VARIABLE_COMMENT/, '#{'],
-        [/\$/gmi, /AMS_RE/gm, '$']
+        [/\$/gmi, /AMS_RE/gm, '$'],
+        [/\\\)/gmi, /AMS_CLOSE/gm, ')']
     ];
 
 
     /**
-     * Javascript code fragment
-     *
+     * code fragment
      * */
     function temporaryProtection(tpl) {
 
@@ -125,43 +125,8 @@
 //寻找变量值
     function transportOperation(tpl) {
 
-        var re = /(AMS_FLAG_IF|AMS_FLAG_ELSEIF){1}(.*?)(?=AMS_FLAG_ELSEIF|AMS_FLAG_ELSE|AMS_FLAG_ENDIF|AMS_FLAG_EACH|AMS_FLAG_JS|[\r\n])/gm;
-
-        tpl = tpl.replace(re, '$1AMS_OPERATION--$2--AMS_OPERATION');
-
-        //开始逐一判断参数合法性
-
-        var amsOperation = /AMS_OPERATION--(.*?)--AMS_OPERATION/gm;
-
-        var operation = tpl.match(amsOperation);
-        //首先靠猜测
-        if (operation) {
-            for (i = 0; i < operation.length; i++) {
-                var item = operation[i];
-                item.match(amsOperation);
-                var $1 = RegExp.$1;
-                //首先查询最右侧括号
-                var rightEnd = $1.lastIndexOf(')');
-                var step1 = $1.substring(0, rightEnd + 1);
-                var step1End = $1.substring(rightEnd + 1);
-                if (JSHINT('var test=' + step1.trim() + ';')) {
-                    tpl = tpl.replace('AMS_OPERATION--' + $1 + '--AMS_OPERATION', 'AMS_OPERATION_SUCCESS--' + step1 + '--AMS_OPERATION_SUCCESS' + step1End);
-                } else {
-                    var _step1 = step1;
-                    var i = 0;
-                    var length = step1.length;
-                    while (_step1.length > 1) {
-                        if (JSHINT('var test=' + _step1.trim() + ';')) {
-                            tpl = tpl.replace('AMS_OPERATION--' + $1 + '--AMS_OPERATION', 'AMS_OPERATION_SUCCESS--' + _step1.trim() + '--AMS_OPERATION_SUCCESS' + step1.trim().substring(_step1.trim().length));
-                            break;
-                        }
-                        _step1 = _step1.substring(0, step1.length - i);
-                        if (i >= step1.length) break;
-                        i++;
-                    }
-                }
-            }
-        }
+        var re = /(AMS_FLAG_IF|AMS_FLAG_ELSEIF){1}(?:[\s]*([^)]+?\)))(.*?)(?=AMS_FLAG_ELSEIF|AMS_FLAG_ELSE|AMS_FLAG_ENDIF|AMS_FLAG_EACH|AMS_FLAG_JS|[\r\n])/gm;
+        tpl = tpl.replace(re, '$1AMS_OPERATION--$2--AMS_OPERATION$3');
 
         return tpl;
     }
@@ -206,11 +171,11 @@
 
         //检查IF标签配对
         var OPEN_IF = [
-            'AMS_FLAG_IFAMS_OPERATION_SUCCESS',
-            'AMS_FLAG_ELSEIFAMS_OPERATION_SUCCESS'
+            'AMS_FLAG_IFAMS_OPERATION',
+            'AMS_FLAG_ELSEIFAMS_OPERATION'
         ];
 
-        var CLOSE_IF = 'AMS_OPERATION_SUCCESS';
+        var CLOSE_IF = 'AMS_OPERATION';
         var IF_FLAG = new RegExp('' +
             '(' +
             OPEN_IF[0] + '--(?:.+?)--' + CLOSE_IF + '|' +
@@ -221,7 +186,7 @@
             'AMS_VAR_START(?:var.+)AMS_VAR_END' + '|' +
             'AMS_FLAG_ELSE|AMS_FLAG_ENDIF|AMS_FLAG_ENDEACH)', 'gm');
 
-        var forEachRe = /AMS_FLAG_EACH\((.+)(?:,)?(.+)?[\s]+in[\s]+([^\s]+)\)/;
+        var forEachRe = /AMS_FLAG_EACH\((.+?)[\s]+in[\s]+([^\s]+)\)/;
 
         //开始转换为JS
         var _tpl = tpl.split(/[\r\n]/);
@@ -234,10 +199,10 @@
                 var _str = arr[i];
                 if (IF_FLAG.test(_str)) {
                     //匹配IF语句
-                    if (/AMS_FLAG_IFAMS_OPERATION_SUCCESS/.test(_str)) {
-                        html.push(_str.replace(/AMS_FLAG_IFAMS_OPERATION_SUCCESS--(.+?)--AMS_OPERATION_SUCCESS/g, 'if $1 {'));
-                    } else if (/AMS_FLAG_ELSEIFAMS_OPERATION_SUCCESS/.test(_str)) {
-                        html.push(_str.replace(/AMS_FLAG_ELSEIFAMS_OPERATION_SUCCESS--(.+?)--AMS_OPERATION_SUCCESS/, '} else if $1 { '));
+                    if (/AMS_FLAG_IFAMS_OPERATION/.test(_str)) {
+                        html.push(_str.replace(/AMS_FLAG_IFAMS_OPERATION--(.+?)--AMS_OPERATION/g, 'if $1 {'));
+                    } else if (/AMS_FLAG_ELSEIFAMS_OPERATION/.test(_str)) {
+                        html.push(_str.replace(/AMS_FLAG_ELSEIFAMS_OPERATION--(.+?)--AMS_OPERATION/, '} else if $1 { '));
                     } else if (_str === 'AMS_FLAG_ELSE') {
                         html.push(_str.replace(/AMS_FLAG_ELSE/, '} else {'));
                     } else if (_str === 'AMS_FLAG_ENDIF') {
@@ -247,10 +212,11 @@
                     else if (/AMS_FLAG_EACH/.test(_str)) {
                         html.push(_str.replace(forEachRe, function (_str) {
                             var match = _str.match(forEachRe);
-                            var i = RegExp.$2.trim().length > 0 ? RegExp.$2 : 'index';
-
-                            return '(function(){\r\nfor(var ' + i + '=0;' + i + '<' + RegExp.$3 + '.length;' + i + '++){\r\n' +
-                                'var ' + RegExp.$1 + '=' + RegExp.$3 + '[' + i + '];';
+                            var $1 = match[1].split(',');
+                            var $2 = match[2];
+                            var i = $1.length === 2 ? $1[1] : 'index';
+                            return '(function(){\r\nfor(var ' + i + '=0;' + i + '<' + $2 + '.length;' + i + '++){\r\n' +
+                                'var ' + $1[0] + '=' + $2 + '[' + i + '];';
 
                         }));
                     } else if (_str === 'AMS_FLAG_ENDEACH') {
@@ -279,7 +245,9 @@
         }
 
         html.push("AMS_RENDER.join('');");
-        return eval(html.join('')) + '\r\n' + html.join('');
+        //return html.join('');
+
+        return  eval(html.join(''));
 
     }
 
