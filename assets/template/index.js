@@ -18,6 +18,7 @@
         [/\\#end/gm , /AMS_END_COMMENT/gm , '\\#end'],
         [/\\#var/gm , /AMS_VAR_COMMENT/gm , '\\#var'],
         [/\\#js/gm , /AMS_JS_COMMENT/gm , '\\#js'],
+        [/\\#\{/, /AMS_VARIABLE_COMMENT/, '#{'],
         [/\$/gmi, /AMS_RE/gm, '$']
     ];
 
@@ -109,7 +110,7 @@
         //接下来分析模板
         function replaceEcho(_value) {
             var re = /[\\]+#\{([^}]+)\}/gm;
-            tpl = _value.replace(re, 'AMS_VARIABLE_COMMENT_START--$1--AMS_VARIABLE_COMMENT_END');
+            tpl = _value.replace(re, 'AMS_VARIABLE_COMMENT$1}');
             tpl = tpl.replace(/#\{([^}]+)\}/gm, 'AMS_PLACEHOLDER_START--$1--AMS_PLACEHOLDER_END')
         }
 
