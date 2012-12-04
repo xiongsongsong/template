@@ -14,7 +14,9 @@ define(function (require, exports, module) {
 
     var JSON = require('./json2').JSON;
 
-    var cache = [];
+    var cache = [
+        []
+    ];
 
     var placeholderFlag = [
         [/\\#if/gm , /AMS_IF_COMMENT/gm , '#if'],
@@ -177,10 +179,22 @@ define(function (require, exports, module) {
 
     function render(value, data) {
 
+        var tpl;
         for (var c = 0; c < cache.length; c++) {
             var _cache = cache[c];
+            if (value === _cache[0]) {
+                tpl = _cache[1];
+            }
         }
 
+        if (!tpl) {
+            tpl = translateIF(value);
+            tpl = transportJS(tpl);
+            tpl = transportOperation(tpl);
+            tpl = revertProtection(tpl);
+            tpl = transportVar(tpl);
+            cache.push([value, tpl]);
+        }
 
         var html = [
             '(function(){ \r\n "use strict";\r\n',
@@ -194,15 +208,6 @@ define(function (require, exports, module) {
             }
         }
 
-        var tpl = translateIF(value);
-
-        tpl = transportJS(tpl);
-
-        tpl = transportOperation(tpl);
-
-        tpl = revertProtection(tpl);
-
-        tpl = transportVar(tpl);
 
         if (/AMS_OPERATION--/gm.test(tpl)) {
             //throw('Syntax Error')
@@ -275,7 +280,7 @@ define(function (require, exports, module) {
         html.push('})();');
         //return html.join('');
 
-        return  eval(html.join(''));
+        return  (html.join(''));
 
     }
 
