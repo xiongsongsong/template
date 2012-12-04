@@ -6,127 +6,12 @@
  * To change this template use File | Settings | File Templates.
  */
 
-(function () {
+define(function (require, exports, module) {
 
     'use strict';
 
-    /*!
-     * Cross-Browser Split 1.1.1
-     * Copyright 2007-2012 Steven Levithan <stevenlevithan.com>
-     * Available under the MIT License
-     * ECMAScript compliant, uniform cross-browser split method
-     */
-
-    /**
-     * Splits a string into an array of strings using a regex or string separator. Matches of the
-     * separator are not included in the result array. However, if `separator` is a regex that contains
-     * capturing groups, backreferences are spliced into the result each time `separator` is matched.
-     * Fixes browser bugs compared to the native `String.prototype.split` and can be used reliably
-     * cross-browser.
-     * @param {String} str String to split.
-     * @param {RegExp|String} separator Regex or string to use for separating the string.
-     * @param {Number} [limit] Maximum number of items to include in the result array.
-     * @returns {Array} Array of substrings.
-     * @example
-     *
-     * // Basic use
-     * split('a b c d', ' ');
-     * // -> ['a', 'b', 'c', 'd']
-     *
-     * // With limit
-     * split('a b c d', ' ', 2);
-     * // -> ['a', 'b']
-     *
-     * // Backreferences in result array
-     * split('..word1 word2..', /([a-z]+)(\d+)/i);
-     * // -> ['..', 'word', '1', ' ', 'word', '2', '..']
-     */
-    var split;
-
-// Avoid running twice; that would break the `nativeSplit` reference
-    split = split || function (undef) {
-
-        var nativeSplit = String.prototype.split,
-            compliantExecNpcg = /()??/.exec("")[1] === undef, // NPCG: nonparticipating capturing group
-            self;
-
-        self = function (str, separator, limit) {
-            // If `separator` is not a regex, use `nativeSplit`
-            if (Object.prototype.toString.call(separator) !== "[object RegExp]") {
-                return nativeSplit.call(str, separator, limit);
-            }
-            var output = [],
-                flags = (separator.ignoreCase ? "i" : "") +
-                    (separator.multiline ? "m" : "") +
-                    (separator.extended ? "x" : "") + // Proposed for ES6
-                    (separator.sticky ? "y" : ""), // Firefox 3+
-                lastLastIndex = 0,
-            // Make `global` and avoid `lastIndex` issues by working with a copy
-                separator = new RegExp(separator.source, flags + "g"),
-                separator2, match, lastIndex, lastLength;
-            str += ""; // Type-convert
-            if (!compliantExecNpcg) {
-                // Doesn't need flags gy, but they don't hurt
-                separator2 = new RegExp("^" + separator.source + "$(?!\\s)", flags);
-            }
-            /* Values for `limit`, per the spec:
-             * If undefined: 4294967295 // Math.pow(2, 32) - 1
-             * If 0, Infinity, or NaN: 0
-             * If positive number: limit = Math.floor(limit); if (limit > 4294967295) limit -= 4294967296;
-             * If negative number: 4294967296 - Math.floor(Math.abs(limit))
-             * If other: Type-convert, then use the above rules
-             */
-            limit = limit === undef ?
-                -1 >>> 0 : // Math.pow(2, 32) - 1
-                limit >>> 0; // ToUint32(limit)
-            while (match = separator.exec(str)) {
-                // `separator.lastIndex` is not reliable cross-browser
-                lastIndex = match.index + match[0].length;
-                if (lastIndex > lastLastIndex) {
-                    output.push(str.slice(lastLastIndex, match.index));
-                    // Fix browsers whose `exec` methods don't consistently return `undefined` for
-                    // nonparticipating capturing groups
-                    if (!compliantExecNpcg && match.length > 1) {
-                        match[0].replace(separator2, function () {
-                            for (var i = 1; i < arguments.length - 2; i++) {
-                                if (arguments[i] === undef) {
-                                    match[i] = undef;
-                                }
-                            }
-                        });
-                    }
-                    if (match.length > 1 && match.index < str.length) {
-                        Array.prototype.push.apply(output, match.slice(1));
-                    }
-                    lastLength = match[0].length;
-                    lastLastIndex = lastIndex;
-                    if (output.length >= limit) {
-                        break;
-                    }
-                }
-                if (separator.lastIndex === match.index) {
-                    separator.lastIndex++; // Avoid an infinite loop
-                }
-            }
-            if (lastLastIndex === str.length) {
-                if (lastLength || !separator.test("")) {
-                    //output.push("");
-                }
-            } else {
-                output.push(str.slice(lastLastIndex));
-            }
-            return output.length > limit ? output.slice(0, limit) : output;
-        };
-
-        // For convenience
-        String.prototype.split = function (separator, limit) {
-            return self(this, separator, limit);
-        };
-
-        return self;
-
-    }();
-
+    var split = require('./split').split;
+    var JSON = require('./json2').JSON;
 
     var placeholderFlag = [
         [/\\#if/gm , /AMS_IF_COMMENT/gm , '#if'],
@@ -134,7 +19,7 @@
         [/\\#else/gm , /AMS_ELSE_COMMENT/gm , '#else'],
         [/\\#each/gm , /AMS_EACH_COMMENT/gm , '#each'],
         [/\\#end/gm , /AMS_END_COMMENT/gm , '#end'],
-        [/\\#var/gm , /AMS_VAR_COMMENT/gm , '#var'],
+        [/\\#run/gm , /AMS_RUN_COMMENT/gm , '#run'],
         [/\\#js/gm , /AMS_JS_COMMENT/gm , '#js'],
         [/\\#\{/, /AMS_VARIABLE_COMMENT/, '#{'],
         [/\$/gmi, /AMS_RE/gm, '$'],
@@ -189,10 +74,10 @@
 
         function _translateIf() {
             if (!/#end/.test(tpl)) return;
-            var _tpl = tpl.substring(0, tpl.indexOf('#end') + 4);
+            var _tpl = tpl.match(/[\s\S]+?#end/)[0];
 
             var _str = '';
-            if (flagRe.test(_tpl)) {
+            if (/#(if|each|js)/gm.test(_tpl)) {
                 var point = [];
 
                 for (var i = 0; i < flag.length; i++) {
@@ -202,7 +87,6 @@
                 }
 
                 _tpl = _tpl.substring(Math.max.apply(null, point));
-                flagRe.test(_tpl);
                 var c = _tpl.match(flagRe);
                 var $1 = c[0].substring(1);
                 var _a = '', _b = '';
@@ -220,7 +104,7 @@
                 if ($1 === 'if') _str = replaceElse(_str);
                 tpl = tpl.replace(_tpl, _str);
             } else {
-                _str = _tpl.substring(0, _tpl.length - 4) + 'AMS_UNOPENED_END';
+                _str = _tpl.substring(0, _tpl.length - 4) + 'echo("#e"+"nd")';
                 tpl = tpl.replace(_tpl, _str);
             }
             _translateIf();
@@ -250,18 +134,22 @@
     }
 
 //转换JS代码块
-    function transportJS(value) {
+    function transportJS(tpl) {
         var _jsRe = /AMS_FLAG_JS([\s\S]+?)AMS_FLAG_ENDJS/gm;
-        var match = value.match(_jsRe);
+        var match = tpl.match(_jsRe);
         if (match) {
             for (var i = 0; i < match.length; i++) {
                 var str = match[i];
                 str.match(_jsRe);
                 var $1 = RegExp.$1;
-                value = value.replace(str, 'AMS_FLAG_JS' + encodeURIComponent($1) + 'AMS_FLAG_ENDJS');
+                tpl = tpl.replace(str, 'AMS_FLAG_JS' + encodeURIComponent($1) + 'AMS_FLAG_ENDJS');
             }
         }
-        return value
+        return tpl
+    }
+
+    function transportVar(tpl) {
+        return tpl.replace(/#run(.+?)$/gm, 'AMS_RUN_START$1AMS_RUN_END')
     }
 
 
@@ -286,6 +174,8 @@
 
         tpl = revertProtection(tpl);
 
+        tpl = transportVar(tpl);
+
         if (/AMS_OPERATION--/gm.test(tpl)) {
             //throw('Syntax Error')
         }
@@ -302,9 +192,9 @@
             OPEN_IF[0] + '--(?:.+?)--' + CLOSE_IF + '|' +
             OPEN_IF[1] + '--(?:.+?)--' + CLOSE_IF + '|' +
             'AMS_FLAG_EACH(?:\\([^)]+?\\))|' +
-            'AMS_PLACEHOLDER_START' + '--(?:.+?)--' + 'AMS_PLACEHOLDER_END' + '|' +
-            'AMS_FLAG_JS(?:.+?)AMS_FLAG_ENDJS' + '|' +
-            'AMS_VAR_START(?:var.+)AMS_VAR_END' + '|' +
+            'AMS_PLACEHOLDER_START' + '--(?:.+?)--' + 'AMS_PLACEHOLDER_END|' +
+            'AMS_FLAG_JS(?:.+?)AMS_FLAG_ENDJS|' +
+            'AMS_RUN_START(?:.+?)AMS_RUN_END|' +
             'AMS_FLAG_ELSE|AMS_FLAG_ENDIF|AMS_FLAG_ENDEACH)', 'gm');
 
         var forEachRe = /AMS_FLAG_EACH\((.+?)[\s]+in[\s]+([^\s]+)\)/;
@@ -356,10 +246,10 @@
                     //匹配JS语句
                     else if (/AMS_FLAG_JS/.test(_str)) {
                         _str.match(/AMS_FLAG_JS(.+?)AMS_FLAG_ENDJS/);
-                        html.push(_str.replace(/AMS_FLAG_JS(.+?)AMS_FLAG_ENDJS/, '(function(){\r\n' + decodeURIComponent(RegExp.$1) + '\r\n})();'));
-                    }//匹配VAR变量声明行数
-                    else if (/AMS_VAR_START/.test(_str)) {
-                        html.push(_str.replace(/AMS_VAR_START(.+?)AMS_VAR_END/, '$1'));
+                        html.push(_str.replace(/AMS_FLAG_JS(.+?)AMS_FLAG_ENDJS/, decodeURIComponent(RegExp.$1) + '\r\n'));
+                    }//匹配RUN
+                    else if (/AMS_RUN_START/.test(_str)) {
+                        html.push(_str.replace(/AMS_RUN_START(.+?)AMS_RUN_END/, '$1'));
                     }
                 } else {
                     if (_str.length > 0) html.push('AMS_RENDER.push("' + _str.replace(/\\/g, '\\\\').replace(/"/g, '\\"') + '");');
@@ -379,13 +269,11 @@
 
     }
 
-    if (typeof define === 'function') {
-        define('template', function (require, exports, module) {
-            exports.render = render;
-        })
+    if (exports) {
+        exports.render = render;
     } else {
         window.render = render;
     }
-})();
 
+});
 
