@@ -23,7 +23,8 @@ template('#{name}' , {name:"template"});
 
 ### #if
 ```javascript
-var tpl='#if(year==2012) 龙年 #elseif(year===2013) 蛇年 #else >_< #end'
+var tpl='#if(1>2) 你很好 #elseif(2>1) 不错 #else 嗯 #end
+```
 
 ###each
 
@@ -55,6 +56,7 @@ var tpl='#each(item,i in arr) #{index+1}:#{item}年 #end' //输出：1:2012年 2
 ```
 请注意，echo可在当前位置直接输出变量值。
 
+### #end
 为了让模板更简洁一些，并没有提供 #endif  #endeach 之类的结束标志，而统一采用 #end，因此请注意标签配对。
 
 ### 注释，在关键字前方加 \ 即可
