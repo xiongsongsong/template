@@ -68,3 +68,13 @@ var tpl='#each(item,i in arr) #{index+1}:#{item}年 #end' //输出：1:2012年 2
 ### 性能和兼容性
 
 template内建缓存，所以性能不错。并且兼容IE6。
+
+### 关于这个模板引擎
+
+初因是想做一个CMS系统，因此首要考虑模板的语法选择。ejs语法臃肿，jade语法怪异，或心理作祟。后来便考虑借鉴velocity语法简洁的思想。
+不知不觉就做了这么个库。
+
+*借鉴了velocity的语法，例如 #if  #end配对.
+*借鉴了jade的语法，例如 #{name}
+*感谢seaJS和spm
+*感谢Google
