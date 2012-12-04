@@ -1,0 +1,22 @@
+{
+    "name":"template",
+    "version":"1.0.0",
+    "root":"gallery",
+    "description":"一款语法简介、易用的JavaScript模板引擎",
+    "homepage":"http://github.com/xiongsongsong/jms",
+    "author":"song",
+    "repository":{
+        "type":"git",
+        "url":""
+    },
+    "bugs":{
+        "url":"github.com/xiongsongsong/jms/issue"
+    },
+    "license":"MIT License",
+    "dependencies":{
+    },
+    "tests":["template"],
+    "output":{
+        "template.js":"."
+    }
+}
