@@ -2,7 +2,7 @@
 
 ```javascript
 
-var obj={name:'template',data:['sea','js'] };
+var obj={k:'template',data:['sea','js'] };
 
 template('#{k} #each(item in data) #{item} #end' , obj);
 ```
@@ -37,11 +37,10 @@ var tpl='#each(item,i in arr) #{index+1}:#{item}年 #end' //输出：1:2012年 2
  #run alert('hello');
  #run var a=123;
 ```
-### 注释，在关键字前方加 \ 即可
 
 ### #js
 
- ####js  #end 之间可放置JavaScript代码
+ #js  #end 之间可放置JavaScript代码
 
 ```javascript
   #js
@@ -51,6 +50,7 @@ var tpl='#each(item,i in arr) #{index+1}:#{item}年 #end' //输出：1:2012年 2
 ```
 请注意，echo可在当前位置直接输出变量值。
 
+### 注释，在关键字前方加 \ 即可
 ```javascript
 \#each...
 #if(a>123) \#elseif(..) #end
