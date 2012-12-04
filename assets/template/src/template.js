@@ -211,8 +211,8 @@ define(function (require, exports, module) {
             tpl = translateIF(value);
             tpl = transportJS(tpl);
             tpl = transportOperation(tpl);
-            tpl = revertProtection(tpl);
             tpl = transportVar(tpl);
+            tpl = revertProtection(tpl);
 
             _tpl = tpl.split(/[\r\n]/);
 
@@ -281,7 +281,7 @@ define(function (require, exports, module) {
             cache.push([value, html.join('')]);
         }
 
-        return  eval(head.join('') + '' + (isCache ? html : html.join('')) + "\r\n return AMS_RENDER.join('');\r\n})();");
+        return  (head.join('') + '' + (isCache ? html : html.join('')) + "\r\n return AMS_RENDER.join('');\r\n})();");
 
     }
 
