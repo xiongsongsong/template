@@ -11,7 +11,10 @@ define(function (require, exports, module) {
     'use strict';
 
     var split = require('./split').split;
+
     var JSON = require('./json2').JSON;
+
+    var cache = [];
 
     var placeholderFlag = [
         [/\\#if/gm , /AMS_IF_COMMENT/gm , '#if'],
@@ -135,14 +138,14 @@ define(function (require, exports, module) {
 
 //转换JS代码块
     function transportJS(tpl) {
-        var _jsRe = /AMS_FLAG_JS([\s\S]+?)AMS_FLAG_ENDJS/gm;
+        var _jsRe = /AMS_FLAG_JS(?:[\s\S]+?)AMS_FLAG_ENDJS/gm;
         var match = tpl.match(_jsRe);
         if (match) {
             for (var i = 0; i < match.length; i++) {
                 var str = match[i];
-                str.match(_jsRe);
-                var $1 = RegExp.$1;
-                tpl = tpl.replace(str, 'AMS_FLAG_JS' + encodeURIComponent($1) + 'AMS_FLAG_ENDJS');
+                var _s = str.match(/AMS_FLAG_JS([\s\S]+?)AMS_FLAG_ENDJS/);
+                if (!_s) continue;
+                tpl = tpl.replace(str, 'AMS_FLAG_JS' + encodeURIComponent(_s[1]) + 'AMS_FLAG_ENDJS');
             }
         }
         return tpl
@@ -153,9 +156,32 @@ define(function (require, exports, module) {
     }
 
 
+    //检查IF标签配对
+    var OPEN_IF = [
+        'AMS_FLAG_IFAMS_OPERATION',
+        'AMS_FLAG_ELSEIFAMS_OPERATION'
+    ];
+
+    var CLOSE_IF = 'AMS_OPERATION';
+    var IF_FLAG = new RegExp('' +
+        '(' +
+        OPEN_IF[0] + '--(?:.+?)--' + CLOSE_IF + '|' +
+        OPEN_IF[1] + '--(?:.+?)--' + CLOSE_IF + '|' +
+        'AMS_FLAG_EACH(?:\\([^)]+?\\))|' +
+        'AMS_PLACEHOLDER_START' + '--(?:.+?)--' + 'AMS_PLACEHOLDER_END|' +
+        'AMS_FLAG_JS(?:.+?)AMS_FLAG_ENDJS|' +
+        'AMS_RUN_START(?:.+?)AMS_RUN_END|' +
+        'AMS_FLAG_ELSE|AMS_FLAG_ENDIF|AMS_FLAG_ENDEACH)', 'gm');
+
+    var forEachRe = /AMS_FLAG_EACH\((.+?)[\s]+in[\s]+([^\s]+)\)/;
+
     function render(value, data) {
 
-        var tpl = translateIF(value);
+        for (var c = 0; c < cache.length; c++) {
+            var _cache = cache[c];
+        }
+
+
         var html = [
             '(function(){ \r\n "use strict";\r\n',
             'var AMS_RENDER=[];\r\n',
@@ -167,6 +193,8 @@ define(function (require, exports, module) {
                 html.push('var ' + k + ' = AMS_DATA.' + k + ';\r\n');
             }
         }
+
+        var tpl = translateIF(value);
 
         tpl = transportJS(tpl);
 
@@ -180,24 +208,6 @@ define(function (require, exports, module) {
             //throw('Syntax Error')
         }
 
-        //检查IF标签配对
-        var OPEN_IF = [
-            'AMS_FLAG_IFAMS_OPERATION',
-            'AMS_FLAG_ELSEIFAMS_OPERATION'
-        ];
-
-        var CLOSE_IF = 'AMS_OPERATION';
-        var IF_FLAG = new RegExp('' +
-            '(' +
-            OPEN_IF[0] + '--(?:.+?)--' + CLOSE_IF + '|' +
-            OPEN_IF[1] + '--(?:.+?)--' + CLOSE_IF + '|' +
-            'AMS_FLAG_EACH(?:\\([^)]+?\\))|' +
-            'AMS_PLACEHOLDER_START' + '--(?:.+?)--' + 'AMS_PLACEHOLDER_END|' +
-            'AMS_FLAG_JS(?:.+?)AMS_FLAG_ENDJS|' +
-            'AMS_RUN_START(?:.+?)AMS_RUN_END|' +
-            'AMS_FLAG_ELSE|AMS_FLAG_ENDIF|AMS_FLAG_ENDEACH)', 'gm');
-
-        var forEachRe = /AMS_FLAG_EACH\((.+?)[\s]+in[\s]+([^\s]+)\)/;
 
         //开始转换为JS
         var _tpl = tpl.split(/[\r\n]/);
@@ -246,7 +256,7 @@ define(function (require, exports, module) {
                     //匹配JS语句
                     else if (/AMS_FLAG_JS/.test(_str)) {
                         _str.match(/AMS_FLAG_JS(.+?)AMS_FLAG_ENDJS/);
-                        html.push(_str.replace(/AMS_FLAG_JS(.+?)AMS_FLAG_ENDJS/, decodeURIComponent(RegExp.$1) + '\r\n'));
+                        html.push(_str.replace(/AMS_FLAG_JS(.+?)AMS_FLAG_ENDJS/, decodeURIComponent(_str.match(/AMS_FLAG_JS(.+?)AMS_FLAG_ENDJS/)[1]) + '\r\n'));
                     }//匹配RUN
                     else if (/AMS_RUN_START/.test(_str)) {
                         html.push(_str.replace(/AMS_RUN_START(.+?)AMS_RUN_END/, '$1'));
