@@ -101,7 +101,7 @@ define(function (require, exports, module) {
                 if ($1 === 'if') _str = replaceElse(_str);
                 tpl = tpl.replace(_tpl, _str);
             } else {
-                _str = _tpl.substring(0, _tpl.length - 4) + 'echo("#e"+"nd")';
+                _str = _tpl.substring(0, _tpl.length - 4) + "echo(\"#e\"+\"nd\")";
                 tpl = tpl.replace(_tpl, _str);
             }
             _translateIf();
@@ -146,7 +146,8 @@ define(function (require, exports, module) {
     }
 
     function transportVar(tpl) {
-        return tpl.replace(/#run(.+?)$/gm, 'AMS_RUN_START$1AMS_RUN_END')
+        tpl = tpl.replace(/^[\s]*#run(.+?)$/gm, 'AMS_RUN_START$1AMS_RUN_END');
+        return tpl
     }
 
 
