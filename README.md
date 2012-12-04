@@ -1,5 +1,7 @@
 # 语法简单，易用的JavaScript模板引擎
 
+目前正在准备编写用例，估计本周内放出。
+
 ```javascript
 
 var obj={k:'template',data:['sea','js'] };
@@ -31,7 +33,7 @@ var tpl='#each(item in arr) #{item}年 #end' //输出：2012年 2013年
 var tpl='#each(item,i in arr) #{index+1}:#{item}年 #end' //输出：1:2012年 2:2013年
 ```
 
-#if、#each可互相嵌套
+ #if、#each可互相嵌套
 
 ### #run
 
@@ -53,9 +55,9 @@ var tpl='#each(item,i in arr) #{index+1}:#{item}年 #end' //输出：1:2012年 2
 ```
 请注意，echo可在当前位置直接输出变量值。
 
-### 关于#end
+#end
 
-由于让模板更简洁，并没有提供 #endif  #endeach  #endjs 之类的结束标志，而统一采用 #end，因此请注意标签配对
+为了让模板更简洁一些，并没有提供 #endif  #endeach 之类的结束标志，而统一采用 #end，因此请注意标签配对。
 
 ### 注释，在关键字前方加 \ 即可
 ```javascript
@@ -65,4 +67,4 @@ var tpl='#each(item,i in arr) #{index+1}:#{item}年 #end' //输出：1:2012年 2
 
 ### 性能和兼容性
 
-template内建缓存，所以性能不错。并且，还兼容IE6。
+template内建缓存，所以性能不错。并且兼容IE6。
