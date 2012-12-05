@@ -2,7 +2,7 @@
 
 ---
 
-语法简单，易用的JavaScript模板引擎。
+语法简洁，易用的JavaScript模板引擎。
 
 ---
 
@@ -72,3 +72,4 @@ echo (arr.join('')); // output:arale
 ## todo
 * 缓存启用开关
 * 模板注释
+* 增加demo页
