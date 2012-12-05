@@ -101,7 +101,8 @@ define(function (require, exports, module) {
                 if ($1 === 'if') _str = replaceElse(_str);
                 tpl = tpl.replace(_tpl, _str);
             } else {
-                _str = _tpl.substring(0, _tpl.length - 4) + "echo(\"#e\"+\"nd\")";
+                //_str = _tpl.substring(0, _tpl.length - 4) + "echo(\"#e\"+\"nd\")";
+                _str = _tpl.substring(0, _tpl.length - 4);
                 tpl = tpl.replace(_tpl, _str);
             }
             _translateIf();
@@ -281,7 +282,7 @@ define(function (require, exports, module) {
             cache.push([value, html.join('')]);
         }
 
-        return  (head.join('') + '' + (isCache ? html : html.join('')) + "\r\n return AMS_RENDER.join('');\r\n})();");
+        return  eval(head.join('') + '' + (isCache ? html : html.join('')) + "\r\n return AMS_RENDER.join('');\r\n})();");
 
     }
 

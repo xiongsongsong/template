@@ -1,0 +1,22 @@
+{
+    "name":"template",
+    "version":"1.0.0",
+    "root":"arale",
+    "description":"语法简单且易用的JavaScript模板引擎",
+    "homepage":"",
+    "author":"xiongsong",
+    "repository":{
+        "type":"git",
+        "url":""
+    },
+    "bugs":{
+        "url":""
+    },
+    "license":"MIT",
+    "dependencies":{
+    },
+    "tests":["template"],
+    "output":{
+        "template.js":"*"
+    }
+}

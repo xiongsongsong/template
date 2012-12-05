@@ -1,80 +1,70 @@
-# 语法简单，易用的JavaScript模板引擎
+# template
 
-目前正在准备编写用例，估计本周内放出。
+---
 
-```javascript
+语法简单，易用的JavaScript模板引擎。主要参考了velocity和jade语法结构。
 
-var obj={k:'template',data:['sea','js'] };
+---
 
-template('#{k} #each(item in data) #{item} #end' , obj);
-```
-## 特点
-
-* 使用简单
-* 嵌套
-* 内建缓存
-
-## 语法
-
-### #{name}
-```javascript
-template('#{name}' , {name:"template"});
-```
-
-### #if
-```javascript
-var tpl='#if(1>2) 你很好 #elseif(2>1) 不错 #else 嗯 #end
-```
-
-###each
+## API
 
 ```javascript
-var obj={ arr:['2012','2013'] }
-var tpl='#each(item in arr) #{item}年 #end' //输出：2012年 2013年
-var tpl='#each(item,i in arr) #{index+1}:#{item}年 #end' //输出：1:2012年 2:2013年
+template('#{name}',{name:'arale'}); //output: arale
 ```
 
- #if、#each可互相嵌套
-
-### #run
-
-支持单行javascript语句，例如在模板中声明变量
+#### #{placeholder}
 
 ```javascript
- #run var a=123;
+template('#{name}',{name:'arale'}) //output: arale
+template('#{name.substring(0,1)}',{name:'arale'})  //output: a
 ```
 
-### #js
+#### #if
+```javascript
+template('#if(n>1) n>1 #end',{n:2}) //output: n>1
+template('#if(n>1) n>1 #elseif(n<1) n<1 #else #{n} #end',{n:1}); //output: 1
+```
 
- #js  #end 之间可放置JavaScript代码
+
+#### #each
+```javascript
+template('#each(item in arr)#{item}#end',{arr:['a','r','a','l','e']}); //output: arale
+template('#each(n in arr)#if(n%2==0)#{n}#end#end',{arr:[1,2,3,4,5,6]}); //output: 246
+
+```
+
+#### #run
+
+单行javascript语句，需要独占一行，多行定义请用#js。
 
 ```javascript
-  #js
-    var name="template";
-    echo (name);
-  #end
+#run var arr=[1,2,3];
+//之后可以在模板中直接使用
+#each(n in arr) #{n} #end //output:123
 ```
-请注意，echo可在当前位置直接输出变量值。
 
-### #end
-为了让模板更简洁一些，并没有提供 #endif  #endeach 之类的结束标志，而统一采用 #end，因此请注意标签配对。
+#### #js
 
-### 注释，在关键字前方加 \ 即可
+可以理解为html文件中的script标记
+
 ```javascript
-\#each...
-#if(a>123) \#elseif(..) #end
+#js
+var arr=['a','r','a','l','e'];
+echo (arr.join('')); // output:arale
+#end
 ```
 
-## 性能和兼容性
+#### 注释
 
-template内建缓存，所以性能不错。并且兼容IE6。
+\\#if | \\#each | \\#end ...
 
-## 关于这个模板引擎
+## 性能 & 兼容性
 
-初因是想做一个CMS系统，因此首要考虑模板的语法选择。ejs语法臃肿，jade语法怪异，或心理作祟。后来便考虑借鉴velocity语法简洁的思想。
-不知不觉就做了这么个库。
+* 内建缓存支持
+* 兼容IE6+
 
-*借鉴了velocity的语法，例如 #if  #end配对.
-*借鉴了jade的语法，例如 #{name}
-*感谢seaJS和spm
-*感谢Google
+## Bug反馈
+
+* github
+* 旺旺: xiong_song
+* 邮箱: xiongsongsong@outlook.com
