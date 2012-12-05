@@ -67,6 +67,8 @@ echo (arr.join('')); // output:arale
 
 ## Bug反馈
 
-* github
-* 旺旺: xiong_song
-* 邮箱: xiongsongsong@outlook.com
+* 此处提issue或邮箱: xiongsongsong@outlook.com
+
+## todo
+* 缓存启用开关
+* 模板注释
