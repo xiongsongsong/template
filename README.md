@@ -2,7 +2,7 @@
 
 ---
 
-语法简单，易用的JavaScript模板引擎。主要参考了velocity和jade语法结构。
+语法简单，易用的JavaScript模板引擎。
 
 ---
 
@@ -56,12 +56,14 @@ echo (arr.join('')); // output:arale
 
 #### 注释
 
+反斜杠
 \\#if | \\#each | \\#end ...
+
 
 ## 性能 & 兼容性
 
-* 内建缓存支持
-* 兼容IE6+
+* 内建缓存
+* IE6也兼容
 
 ## Bug反馈
 
