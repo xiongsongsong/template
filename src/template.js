@@ -2,15 +2,9 @@ define(function (require, exports, module) {
 
     'use strict';
 
-    var split = require('./split').split;
+    var AMS_cache = [ ];
 
-    var JSON = require('./json2').JSON;
-
-    var cache = [
-        []
-    ];
-
-    var placeholderFlag = [
+    var AMS_PLACEHOLDER_FLAG = [
         [/\\#if/gm , /AMS_IF_COMMENT/gm , '#if'],
         [/\\#elseif/gm , /AMS_ELSEIF_COMMENT/gm , '#elseif'],
         [/\\#else/gm , /AMS_ELSE_COMMENT/gm , '#else'],
@@ -23,14 +17,13 @@ define(function (require, exports, module) {
         [/\\\)/gmi, /AMS_CLOSE/gm, ')']
     ];
 
-
     /**
      * code fragment
      * */
     function temporaryProtection(tpl) {
 
-        for (var i = 0; i < placeholderFlag.length; i++) {
-            var o = placeholderFlag[i];
+        for (var i = 0; i < AMS_PLACEHOLDER_FLAG.length; i++) {
+            var o = AMS_PLACEHOLDER_FLAG[i];
             tpl = tpl.replace(o[0], o[1].source)
         }
 
@@ -42,8 +35,8 @@ define(function (require, exports, module) {
 
     function revertProtection(tpl) {
 
-        for (var i = 0; i < placeholderFlag.length; i++) {
-            var o = placeholderFlag[i];
+        for (var i = 0; i < AMS_PLACEHOLDER_FLAG.length; i++) {
+            var o = AMS_PLACEHOLDER_FLAG[i];
             tpl = tpl.replace(o[1], o[2])
         }
 
@@ -59,8 +52,6 @@ define(function (require, exports, module) {
         return str;
     }
 
-//RegExp object does not support lookbehind
-//so with the code below
     function translateIF(tpl) {
 
         tpl = temporaryProtection(tpl);
@@ -110,7 +101,6 @@ define(function (require, exports, module) {
 
         _translateIf();
 
-        //接下来分析模板
         function replaceEcho(_value) {
             var re = /[\\]+#\{([^}]+)\}/gm;
             tpl = _value.replace(re, 'AMS_VARIABLE_COMMENT$1}');
@@ -122,7 +112,7 @@ define(function (require, exports, module) {
         return tpl;
     }
 
-//寻找变量值
+    //寻找变量值
     function transportOperation(tpl) {
 
         var re = /(AMS_FLAG_IF|AMS_FLAG_ELSEIF){1}(?:[\s]*([^)]+?\)))(.*?)(?=AMS_FLAG_ELSEIF|AMS_FLAG_ELSE|AMS_FLAG_ENDIF|AMS_FLAG_EACH|AMS_FLAG_JS|[\r\n])/gm;
@@ -131,7 +121,7 @@ define(function (require, exports, module) {
         return tpl;
     }
 
-//转换JS代码块
+    //转换JS代码块
     function transportJS(tpl) {
         var _jsRe = /AMS_FLAG_JS(?:[\s\S]+?)AMS_FLAG_ENDJS/gm;
         var match = tpl.match(_jsRe);
@@ -151,35 +141,106 @@ define(function (require, exports, module) {
         return tpl
     }
 
-
     //检查IF标签配对
-    var OPEN_IF = [
-        'AMS_FLAG_IFAMS_OPERATION',
-        'AMS_FLAG_ELSEIFAMS_OPERATION'
-    ];
-
-    var CLOSE_IF = 'AMS_OPERATION';
-    var IF_FLAG = new RegExp('' +
-        '(' +
-        OPEN_IF[0] + '--(?:.+?)--' + CLOSE_IF + '|' +
-        OPEN_IF[1] + '--(?:.+?)--' + CLOSE_IF + '|' +
+    var AMS_IF_FLAG_RE = new RegExp('(AMS_FLAG_IFAMS_OPERATION--(?:.+?)--AMS_OPERATION|' +
+        'AMS_FLAG_ELSEIFAMS_OPERATION--(?:.+?)--AMS_OPERATION|' +
         'AMS_FLAG_EACH(?:\\([^)]+?\\))|' +
         'AMS_PLACEHOLDER_START' + '--(?:.+?)--' + 'AMS_PLACEHOLDER_END|' +
         'AMS_FLAG_JS(?:.+?)AMS_FLAG_ENDJS|' +
         'AMS_RUN_START(?:.+?)AMS_RUN_END|' +
         'AMS_FLAG_ELSE|AMS_FLAG_ENDIF|AMS_FLAG_ENDEACH)', 'gm');
 
-    var forEachRe = /AMS_FLAG_EACH\((.+?)[\s]+in[\s]+([^\s]+)\)/;
+    var AMS_EACH_RE = /AMS_FLAG_EACH\((.+?)[\s]+in[\s]+([^\s]+)\)/;
 
+    function preCompile(value) {
+
+        var split = require('./split').split;
+
+        var html = [];
+        var tpl = translateIF(value);
+        tpl = transportJS(tpl);
+        tpl = transportOperation(tpl);
+        tpl = transportVar(tpl);
+        tpl = revertProtection(tpl);
+
+        var _tpl = tpl.split(/[\r\n]/);
+
+        for (var l = 0; l < _tpl.length; l++) {
+            var str = _tpl[l];
+
+            //检查IF标签配对
+            var arr = split(str, AMS_IF_FLAG_RE);
+            for (var i = 0; i < arr.length; i++) {
+                var _str = arr[i];
+                if (AMS_IF_FLAG_RE.test(_str)) {
+                    //匹配IF语句
+                    if (/AMS_FLAG_IFAMS_OPERATION/.test(_str)) {
+                        html.push(_str.replace(/AMS_FLAG_IFAMS_OPERATION--(.+?)--AMS_OPERATION/g, 'if $1 {'));
+                    } else if (/AMS_FLAG_ELSEIFAMS_OPERATION/.test(_str)) {
+                        html.push(_str.replace(/AMS_FLAG_ELSEIFAMS_OPERATION--(.+?)--AMS_OPERATION/, '} else if $1 { '));
+                    } else if (_str === 'AMS_FLAG_ELSE') {
+                        html.push(_str.replace(/AMS_FLAG_ELSE/, '} else {'));
+                    } else if (_str === 'AMS_FLAG_ENDIF') {
+                        html.push(_str.replace(/AMS_FLAG_ENDIF/gm, '}'));
+                    }
+                    //匹配Each语句
+                    else if (/AMS_FLAG_EACH/.test(_str)) {
+                        html.push(_str.replace(AMS_EACH_RE, function (_str) {
+                            var match = _str.match(AMS_EACH_RE);
+                            var $1 = match[1].split(',');
+                            var $2 = match[2];
+                            var i = $1.length > 1 ? $1[1] : 'index';
+
+                            var arr = $1[2] ? $1[2] : $2;
+                            //模拟ES5 中forEach的参数定义
+                            return '' +
+                                //如果存在forEach中第3个形参
+                                ($1[2] ? 'var ' + $1[2] + '=' + $2 + ';' : '') + '\r\n' +
+                                'for(var ' + i + '=0;' + i + '<' + arr + '.length;' + i + '++){\r\n' +
+                                'var ' + $1[0] + '=' + arr + '[' + i + '];\r\n';
+
+                        }));
+                    } else if (_str === 'AMS_FLAG_ENDEACH') {
+                        html.push(_str.replace(/AMS_FLAG_ENDEACH/gm, '};'));
+                    }
+                    //匹配占位符
+                    else if (/AMS_PLACEHOLDER_START/.test(_str)) {
+                        html.push(_str.replace(/AMS_PLACEHOLDER_START--(.+?)--AMS_PLACEHOLDER_END/, 'echo($1);'));
+                    }
+                    //匹配JS语句
+                    else if (/AMS_FLAG_JS/.test(_str)) {
+                        _str.match(/AMS_FLAG_JS(.+?)AMS_FLAG_ENDJS/);
+                        html.push(_str.replace(/AMS_FLAG_JS(.+?)AMS_FLAG_ENDJS/, decodeURIComponent(_str.match(/AMS_FLAG_JS(.+?)AMS_FLAG_ENDJS/)[1]) + '\r\n'));
+                    }//匹配RUN
+                    else if (/AMS_RUN_START/.test(_str)) {
+                        html.push(_str.replace(/AMS_RUN_START(.+?)AMS_RUN_END/, '$1'));
+                    }
+                } else {
+                    if (_str.length > 0) html.push('AMS_RENDER.push("' + _str.replace(/\\/g, '\\\\').replace(/"/g, '\\"') + '");');
+                }
+                if (_str.length > 0) html.push('\r\n');
+                if (i === arr.length - 1) html.push('AMS_RENDER.push("\\r\\n");');
+            }
+        }
+
+        html.push('\r\n');
+        return html;
+    }
+
+
+    function _render(AMS_TPL) {
+        return eval(AMS_TPL);
+    }
 
     function render(value, data) {
 
-        var tpl;
+        var JSON = require('./json2').JSON;
+
         var isCache = false;
         var html;
 
-        for (var c = 0; c < cache.length; c++) {
-            var _cache = cache[c];
+        for (var c = 0; c < AMS_cache.length; c++) {
+            var _cache = AMS_cache[c];
             if (value === _cache[0]) {
                 html = _cache[1];
                 isCache = true;
@@ -201,95 +262,20 @@ define(function (require, exports, module) {
             }
         }
 
-        //开始转换为JS
-        var _tpl;
-
         //如果缓存中无值
         if (isCache === false) {
-
-            html = [];
-
-            tpl = translateIF(value);
-            tpl = transportJS(tpl);
-            tpl = transportOperation(tpl);
-            tpl = transportVar(tpl);
-            tpl = revertProtection(tpl);
-
-            _tpl = tpl.split(/[\r\n]/);
-
-
-            for (var l = 0; l < _tpl.length; l++) {
-                var str = _tpl[l];
-
-                //检查IF标签配对
-                var arr = split(str, IF_FLAG);
-                for (var i = 0; i < arr.length; i++) {
-                    var _str = arr[i];
-                    if (IF_FLAG.test(_str)) {
-                        //匹配IF语句
-                        if (/AMS_FLAG_IFAMS_OPERATION/.test(_str)) {
-                            html.push(_str.replace(/AMS_FLAG_IFAMS_OPERATION--(.+?)--AMS_OPERATION/g, 'if $1 {'));
-                        } else if (/AMS_FLAG_ELSEIFAMS_OPERATION/.test(_str)) {
-                            html.push(_str.replace(/AMS_FLAG_ELSEIFAMS_OPERATION--(.+?)--AMS_OPERATION/, '} else if $1 { '));
-                        } else if (_str === 'AMS_FLAG_ELSE') {
-                            html.push(_str.replace(/AMS_FLAG_ELSE/, '} else {'));
-                        } else if (_str === 'AMS_FLAG_ENDIF') {
-                            html.push(_str.replace(/AMS_FLAG_ENDIF/gm, '}'));
-                        }
-                        //匹配Each语句
-                        else if (/AMS_FLAG_EACH/.test(_str)) {
-                            html.push(_str.replace(forEachRe, function (_str) {
-                                var match = _str.match(forEachRe);
-                                var $1 = match[1].split(',');
-                                var $2 = match[2];
-                                var i = $1.length > 1 ? $1[1] : 'index';
-
-                                var arr = $1[2] ? $1[2] : $2;
-                                //模拟ES5 中forEach的参数定义
-                                return '' +
-                                    //如果存在forEach中第3个形参
-                                    ($1[2] ? 'var ' + $1[2] + '=' + $2 + ';' : '') + '\r\n' +
-                                    'for(var ' + i + '=0;' + i + '<' + arr + '.length;' + i + '++){\r\n' +
-                                    'var ' + $1[0] + '=' + arr + '[' + i + '];\r\n';
-
-                            }));
-                        } else if (_str === 'AMS_FLAG_ENDEACH') {
-                            html.push(_str.replace(/AMS_FLAG_ENDEACH/gm, '};'));
-                        }
-                        //匹配占位符
-                        else if (/AMS_PLACEHOLDER_START/.test(_str)) {
-                            html.push(_str.replace(/AMS_PLACEHOLDER_START--(.+?)--AMS_PLACEHOLDER_END/, 'echo($1);'));
-                        }
-                        //匹配JS语句
-                        else if (/AMS_FLAG_JS/.test(_str)) {
-                            _str.match(/AMS_FLAG_JS(.+?)AMS_FLAG_ENDJS/);
-                            html.push(_str.replace(/AMS_FLAG_JS(.+?)AMS_FLAG_ENDJS/, decodeURIComponent(_str.match(/AMS_FLAG_JS(.+?)AMS_FLAG_ENDJS/)[1]) + '\r\n'));
-                        }//匹配RUN
-                        else if (/AMS_RUN_START/.test(_str)) {
-                            html.push(_str.replace(/AMS_RUN_START(.+?)AMS_RUN_END/, '$1'));
-                        }
-                    } else {
-                        if (_str.length > 0) html.push('AMS_RENDER.push("' + _str.replace(/\\/g, '\\\\').replace(/"/g, '\\"') + '");');
-                    }
-                    if (_str.length > 0) html.push('\r\n');
-                    if (i === arr.length - 1) html.push('AMS_RENDER.push("\\r\\n");');
-                }
-
-                html.push('\r\n');
-
-            }
-
-            cache.push([value, html.join('')]);
+            html = preCompile(value).join('');
+            AMS_cache.push([value, html]);
         }
 
-        return  eval(head.join('') + '' + (isCache ? html : html.join('')) + "\r\n return AMS_RENDER.join('');\r\n})();");
+        html = head.join('') + '' + html + "\r\n return AMS_RENDER.join('');\r\n})();";
+
+        if (!data) return html;
+
+        return _render(html);
 
     }
 
-    if (module.exports) {
-        module.exports = render;
-    } else {
-        window.template = template;
-    }
+    module.exports = render;
 
 });

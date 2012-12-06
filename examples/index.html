@@ -1,0 +1,55 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="utf-8">
+    <title>Analysis label pairing</title>
+    <style type="text/css">
+        body {
+            margin: 0;
+            padding: 0;
+        }
+
+        textarea {
+            display: inline-block;
+            width: 32%;
+            vertical-align: top;
+            height: 600px;
+            border: solid 1px #aaa;
+            background: #333;
+            color: #fff;
+            padding: 4px;
+            margin: 0 auto;
+            font-family: Consolas, sans-serif;
+            font-size: 12px;
+            line-height: 23px;
+        }
+    </style>
+</head>
+<body>
+<textarea id="tpl">
+<h2>#{name}</h2>
+<p>#{describe}</p>
+<ul>
+    #each(item,index in planet)
+    <li #if(index%2==0)class="odd"#end>#{item}</li>
+    #end
+</ul>
+</textarea>
+
+<textarea id="precompile">
+
+</textarea>
+
+<textarea id="result">
+
+</textarea>
+<textarea id="data" style="width:100%;" >
+{
+    "name":"太阳系",
+    "describe":"以太阳为中心，和所有受到太阳的重力约束天体的集合体。",
+    "planet":["水星","金星","地球","火星","谷神星","木星","土星","天王星","海王星","冥王星","妊神星","鸟神星","阋神星"]
+}
+</textarea>
+<script src="https://a.alipayobjects.com/seajs/1.2.1/sea.js" data-main="./demo"></script>
+</body>
+</html>
