@@ -209,7 +209,6 @@ define(function (require, exports, module) {
                     }
                     //匹配JS语句
                     else if (/AMS_FLAG_JS/.test(_str)) {
-                        _str.match(/AMS_FLAG_JS(.+?)AMS_FLAG_ENDJS/);
                         html.push(_str.replace(/AMS_FLAG_JS(.+?)AMS_FLAG_ENDJS/, decodeURIComponent(_str.match(/AMS_FLAG_JS(.+?)AMS_FLAG_ENDJS/)[1]) + '\r\n'));
                     }//匹配RUN
                     else if (/AMS_RUN_START/.test(_str)) {
@@ -226,7 +225,6 @@ define(function (require, exports, module) {
         html.push('\r\n');
         return html;
     }
-
 
     function _render(AMS_TPL) {
         return eval(AMS_TPL);
@@ -265,14 +263,21 @@ define(function (require, exports, module) {
         //如果缓存中无值
         if (isCache === false) {
             html = preCompile(value).join('');
-            AMS_cache.push([value, html]);
+            AMS_cache.push([value, html])
         }
 
         html = head.join('') + '' + html + "\r\n return AMS_RENDER.join('');\r\n})();";
 
         if (!data) return html;
 
-        return _render(html);
+        try {
+            return _render(html);
+        } catch (err) {
+            if (isCache === false) {
+                AMS_cache.pop();
+            }
+            return err;
+        }
 
     }
 
