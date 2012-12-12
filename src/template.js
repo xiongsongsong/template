@@ -230,19 +230,21 @@ define(function (require, exports, module) {
         return eval(AMS_TPL);
     }
 
-    function render(value, data) {
+    function render(value, data, configs) {
 
         var JSON = require('./json2').JSON;
 
         var isCache = false;
         var html;
 
-        for (var c = 0; c < AMS_cache.length; c++) {
-            var _cache = AMS_cache[c];
-            if (value === _cache[0]) {
-                html = _cache[1];
-                isCache = true;
-                break;
+        if (configs === undefined || (configs && configs.cache !== false)) {
+            for (var c = 0; c < AMS_cache.length; c++) {
+                var _cache = AMS_cache[c];
+                if (value === _cache[0]) {
+                    html = _cache[1];
+                    isCache = true;
+                    break;
+                }
             }
         }
 
@@ -273,9 +275,6 @@ define(function (require, exports, module) {
         try {
             return _render(html);
         } catch (err) {
-            if (isCache === false) {
-                AMS_cache.pop();
-            }
             return err;
         }
 
