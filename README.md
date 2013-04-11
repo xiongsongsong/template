@@ -35,7 +35,7 @@ template('#each(n in arr)#if(n%2==0)#{n}#end#end',{arr:[1,2,3,4,5,6]}); //output
 
 #### #run
 
-单行javascript语句，需要独占一行，多行定义请用#js。
+单行javascript语句，需要独占一行，多行定义请用#js
 
 ```javascript
 #run var arr=[1,2,3];
