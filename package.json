@@ -1,22 +1,27 @@
 {
-    "name":"template",
-    "version":"1.0.0",
-    "root":"arale",
-    "description":"语法简单且易用的JavaScript模板引擎",
-    "homepage":"",
-    "author":"xiongsong",
-    "repository":{
-        "type":"git",
-        "url":""
+    "family": "template",
+    "name": "template",
+    "version": "1.0.0",
+    "description": "语法简单且易用的JavaScript模板引擎",
+    "homepage": "https://github.com/xiongsongsong/template",
+    "repository": {
+        "type": "git",
+        "url": "https://github.com/xiongsongsong/template.git"
     },
-    "bugs":{
-        "url":""
-    },
-    "license":"MIT",
-    "dependencies":{
-    },
-    "tests":["template"],
-    "output":{
-        "template.js":"*"
+    "keywords": ["template"],
+
+    "spm": {
+        "source": "src",
+        "output": ["template.js","json2.js","split.js"],
+        "alias": {
+        },
+        "engines": {
+            "seajs": "seajs/seajs/1.2.0/sea.js"
+        },
+        "platforms": {
+            "ie": [6, 7],
+            "firefox": ["13"],
+            "chrome": [20]
+        }
     }
 }
