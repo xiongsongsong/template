@@ -54,6 +54,26 @@ echo (arr.join('')); // output:arale
 #end
 ```
 
+#### 模板清晰简洁
+
+````html
+#each(item in data)
+    <dl>
+        <dt>#{user[item.user_id]}</dt>
+        <dd>
+            #{item.content}
+            <ul>
+                #if(item.files)
+                    #each(file in item.files)
+                        <li>#{file}</li>
+                    #end
+                #end
+            </ul>
+        </dd>
+    </dl>
+#end
+````
+
 #### 注释
 
 反斜杠
