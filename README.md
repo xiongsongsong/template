@@ -65,7 +65,7 @@ echo (arr.join('')); // output:arale
             <ul>
                 #if(item.files)
                     #each(file in item.files)
-                        <li>#{file}</li>
+                        <li>#{file} #{index+1}，一共有#{arr.length}个 </li>
                     #end
                 #end
             </ul>
