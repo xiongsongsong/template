@@ -85,9 +85,6 @@ echo (arr.join('')); // output:arale
 * 内建缓存
 * IE6也兼容
 
-## Bug反馈
-
-* 此处提issue或邮箱: xiongsongsong@outlook.com
 
 ## todo
 * 缓存启用开关
