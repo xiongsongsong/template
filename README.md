@@ -87,6 +87,7 @@ echo (arr.join('')); // output:arale
 
 
 ## todo
+* 如果你觉得好用，烦请点下顶部的Star或一起参与，这样好鞭策我去改进。
 * 缓存启用开关
 * 模板注释
 * 增加demo页
