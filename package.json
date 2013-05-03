@@ -9,19 +9,13 @@
         "url": "https://github.com/xiongsongsong/template.git"
     },
     "keywords": ["template"],
-
     "spm": {
         "source": "src",
         "output": ["template.js","json2.js","split.js"],
         "alias": {
         },
-        "engines": {
-            "seajs": "seajs/seajs/1.2.0/sea.js"
-        },
         "platforms": {
-            "ie": [6, 7],
-            "firefox": ["13"],
-            "chrome": [20]
+            "ie": [6, 7]
         }
     }
 }
