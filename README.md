@@ -27,6 +27,9 @@ template('#if(n>1) n>1 #elseif(n<1) n<1 #else #{n} #end',{n:1}); //output: 1
 
 
 #### #each
+
+\#each同ES5中arr.forEach中fn的参数定义，比如:#each(obj,index,arr in [1,2,3,4,5])。
+
 ```javascript
 template('#each(item in arr)#{item}#end',{arr:['a','r','a','l','e']}); //output: arale
 template('#each(n in arr)#if(n%2==0)#{n}#end#end',{arr:[1,2,3,4,5,6]}); //output: 246
@@ -35,7 +38,7 @@ template('#each(n in arr)#if(n%2==0)#{n}#end#end',{arr:[1,2,3,4,5,6]}); //output
 
 #### #run
 
-单行javascript语句，需要独占一行，多行定义请用#js
+书写单行任意JS代码，适合变量声明的场景。
 
 ```javascript
 #run var arr=[1,2,3];
@@ -45,7 +48,7 @@ template('#each(n in arr)#if(n%2==0)#{n}#end#end',{arr:[1,2,3,4,5,6]}); //output
 
 #### #js
 
-可以理解为html文件中的script标记
+书写多行任意JS代码，适合复杂的场景。
 
 ```javascript
 #js
@@ -54,23 +57,50 @@ echo (arr.join('')); // output:arale
 #end
 ```
 
-#### 模板清晰简洁
+### 一段模板展示
+
+小心地雷：请特别留心模板#each示例中，i、j这两个变量为何要分别设置，因为#each本质使用for实现的。
 
 ````html
-#each(item in data)
-    <dl>
-        <dt>#{user[item.user_id]}</dt>
-        <dd>
-            #{item.content}
-            <ul>
-                #if(item.files)
-                    #each(file,index,arr in item.files)
-                        <li>#{index+1}: #{file}，一共有#{arr.length}个 </li>
-                    #end
-                #end
-            </ul>
-        </dd>
-    </dl>
+
+<h2>\#run比较适合变量声明的场景</h2>
+#run echo('系统时间：'+new Date().toLocaleString())
+#run var hello="world";
+
+<h2>\#js可以使用任何JS语法，适合做复杂的模板逻辑</h2>
+#js
+    var rand=Math.random();
+    echo ('随机数：');
+    echo (rand);
+    if(rand>.5){
+        echo('，大于.5')
+    }else{
+        echo('，小于.5')
+}
+#end
+
+<h2>模板中提供的if else</h2>
+
+#if(rand>.5)
+    大于0.5
+#else
+    小于0.5
+#end
+
+<h2>\#each</h2>
+
+#each(item,i in data)
+<dl>
+    <dt>第#{i+1}</dt>
+    <ul>
+        #if(item.files instanceof Array)
+            #each(file,j,arr in item.files)
+            <li>第 #{j+1} 个，总共#{arr.length}个</li>
+            #end
+        #end
+    </ul>
+    </dd>
+</dl>
 #end
 ````
 
