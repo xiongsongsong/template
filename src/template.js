@@ -223,7 +223,7 @@ define(function (require, exports, module) {
                             var match = _str.match(forEachRe);
                             var $1 = match[1].split(',');
                             var $2 = match[2];
-                            var i = $1.length > 1 ? $1[1] : 'index' + parseInt(Math.random() * 1000000000000, 10);
+                            var i = $1.length > 1 ? $1[1] : 'index';
 
                             var arr = $1[2] ? $1[2] : $2;
                             //模拟ES5 中forEach的参数定义
@@ -260,6 +260,8 @@ define(function (require, exports, module) {
 
         }
 
+
+        console.log(head + html)
         return  eval(head + html);
 
     }
