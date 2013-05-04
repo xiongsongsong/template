@@ -63,22 +63,6 @@ echo (arr.join('')); // output:arale
 
 ````html
 
-<h2>\#run比较适合变量声明的场景</h2>
-#run echo('系统时间：'+new Date().toLocaleString())
-#run var hello="world";
-
-<h2>\#js可以使用任何JS语法，适合做复杂的模板逻辑</h2>
-#js
-    var rand=Math.random();
-    echo ('随机数：');
-    echo (rand);
-    if(rand>.5){
-        echo('，大于.5')
-    }else{
-        echo('，小于.5')
-}
-#end
-
 <h2>模板中提供的if else</h2>
 
 #if(rand>.5)
@@ -102,6 +86,25 @@ echo (arr.join('')); // output:arale
     </dd>
 </dl>
 #end
+
+
+<h2>\#run比较适合变量声明的场景</h2>
+#run echo('系统时间：'+new Date().toLocaleString())
+#run var hello="world";
+
+<h2>\#js可以使用任何JS语法，适合做复杂的模板逻辑</h2>
+#js
+    var rand=Math.random();
+    echo ('随机数：');
+    echo (rand);
+    if(rand>.5){
+        echo('，大于.5')
+    }else{
+        echo('，小于.5')
+}
+#end
+
+
 ````
 
 #### 转义
