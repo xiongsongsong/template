@@ -110,9 +110,6 @@ echo (arr.join('')); // output:arale
 >\\#if | \\#each | \\#end ...
 
 
-## 性能 & 兼容性
-
-* 内建缓存
 * IE6也兼容
 
 
