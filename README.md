@@ -74,10 +74,10 @@ echo (arr.join('')); // output:arale
 #end
 ````
 
-#### 注释
+#### 转义
 
-反斜杠
-\\#if | \\#each | \\#end ...
+>使用反斜杠
+>\\#if | \\#each | \\#end ...
 
 
 ## 性能 & 兼容性
