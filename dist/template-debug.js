@@ -182,7 +182,6 @@ define("template/template/1.0.0/template-debug", [ "./split-debug", "./json2-deb
             }
             html += "\r\n";
         }
-        console.log(head + html);
         return eval(head + html);
     }
     if (module.exports) {

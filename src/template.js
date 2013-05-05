@@ -268,8 +268,6 @@ define(function (require, exports, module) {
 
         }
 
-
-        console.log(head + html)
         return  eval(head + html);
 
     }
