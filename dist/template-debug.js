@@ -2,6 +2,7 @@ define("template/template/1.0.0/template-debug", [ "./split-debug", "./json2-deb
     "use strict";
     var split = require("./split-debug").split;
     var JSON = require("./json2-debug").JSON;
+    //#each中避免索引重名的一个辅助变量，自增
     var AMS_Index = 0;
     var placeholderFlag = [ [ /\\#if/gm, /AMS_IF_COMMENT/gm, "#if" ], [ /\\#elseif/gm, /AMS_ELSEIF_COMMENT/gm, "#elseif" ], [ /\\#else/gm, /AMS_ELSE_COMMENT/gm, "#else" ], [ /\\#each/gm, /AMS_EACH_COMMENT/gm, "#each" ], [ /\\#end/gm, /AMS_END_COMMENT/gm, "#end" ], [ /\\#run/gm, /AMS_RUN_COMMENT/gm, "#run" ], [ /\\#js/gm, /AMS_JS_COMMENT/gm, "#js" ], [ /\\#\{/, /AMS_VARIABLE_COMMENT/, "#{" ], [ /\$/gim, /AMS_RE/gm, "$" ], [ /\\\)/gim, /AMS_CLOSE/gm, ")" ] ];
     /**
@@ -154,7 +155,10 @@ define("template/template/1.0.0/template-debug", [ "./split-debug", "./json2-deb
                             var match = _str.match(forEachRe);
                             var $1 = match[1].split(",");
                             var $2 = match[2];
-                            var i = $1.length > 1 ? $1[1] : "index" + AMS_Index++;
+                            //避免让嵌套的索引变量名重名，导致循环错误
+                            var i = $1.length > 1 ? $1[1] : "index" + parseInt(Math.random() * 1e8, 10) + AMS_Index++;
+                            //避免无休止的增长
+                            if (AMS_Index > 999999999) AMS_Index = 0;
                             var arr = $1[2] ? $1[2] : $2;
                             //模拟ES5 中forEach的参数定义
                             return "" + (//如果存在forEach中第3个形参

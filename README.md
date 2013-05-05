@@ -65,6 +65,8 @@ echo (arr.join('')); // output:arale
 
 <h2>模板中提供的if else</h2>
 
+#run var rand=Math.random();
+
 #if(rand>.5)
     大于0.5
 #else

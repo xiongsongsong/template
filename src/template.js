@@ -6,6 +6,7 @@ define(function (require, exports, module) {
 
     var JSON = require('./json2').JSON;
 
+    //#each中避免索引重名的一个辅助变量，自增
     var AMS_Index = 0;
 
     var placeholderFlag = [
@@ -225,7 +226,12 @@ define(function (require, exports, module) {
                             var match = _str.match(forEachRe);
                             var $1 = match[1].split(',');
                             var $2 = match[2];
-                            var i = $1.length > 1 ? $1[1] : 'index' + AMS_Index++;
+
+                            //避免让嵌套的索引变量名重名，导致循环错误
+                            var i = $1.length > 1 ? $1[1] : 'index' + parseInt(Math.random() * 100000000, 10) + AMS_Index++;
+
+                            //避免无休止的增长
+                            if (AMS_Index > 999999999) AMS_Index = 0;
 
                             var arr = $1[2] ? $1[2] : $2;
                             //模拟ES5 中forEach的参数定义
