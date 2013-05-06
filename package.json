@@ -11,7 +11,7 @@
     "keywords": ["template"],
     "spm": {
         "source": "src",
-        "output": ["template.js","json2.js","split.js"],
+        "output": ["template.js", "split.js"],
         "alias": {
         },
         "platforms": {
