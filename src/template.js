@@ -262,7 +262,6 @@ define(function (require, exports, module) {
             html += '\r\n'
 
         }
-        console.log(head+html)
 
         return  head + html
 
