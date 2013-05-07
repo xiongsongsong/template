@@ -262,6 +262,7 @@ define(function (require, exports, module) {
             html += '\r\n'
 
         }
+        console.log(head+html)
 
         return  head + html
 
@@ -271,10 +272,6 @@ define(function (require, exports, module) {
         return eval(AMS_CreateTpl(AMS_VALUE, AMS_DATA))
     }
 
-    if (module.exports) {
         module.exports = AMS_Render
-    } else {
-        typeof window.template == 'undefined' ? window.template = AMS_Render : null
-    }
 
 });

@@ -1,0 +1,55 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Test</title>
+    <meta charset="utf-8">
+    <script src="./lib/seajs-jquery.js" id="seajsnode"></script>
+    <link rel="stylesheet" href="./lib/mocha.css"/>
+    <script src="./lib/mocha.js"></script>
+    <script>mocha.setup('bdd')</script>
+    <script src="./lib/chai.js"></script>
+    <script>chai.Should();</script>
+</head>
+<body>
+<pre>
+    var user = {
+        name: 'template',
+        green: {
+            rgb: '#00ff00',
+            like: ['#00ee00', '#00dddd', '#00cc00']
+        }
+    };
+</pre>
+<div id="mocha"></div>
+<script>
+
+    function trim(str) {
+        return jQuery.trim(str);
+    }
+
+    define('runTest', function (require, exports, module) {
+
+        window.tpl = require('/src/template');
+
+        require('../test/placeholder');
+
+        require('../test/if');
+
+        require('../test/each');
+
+        require('../test/run');
+
+        require('../test/js');
+
+        require('../test/comments');
+
+        mocha.run();
+
+    });
+
+    seajs.use('runTest')
+
+</script>
+
+</body>
+</html>
