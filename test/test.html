@@ -29,7 +29,9 @@
 
     define('runTest', function (require, exports, module) {
 
-        window.tpl = require('../../src/template');
+        window.render = require('../../src/template').render;
+
+        window.compile = require('../../src/template').compile;
 
         require('../test/placeholder');
 
@@ -42,6 +44,8 @@
         require('../test/js');
 
         require('../test/comments');
+
+        require('../test/prper');
 
         mocha.run();
 

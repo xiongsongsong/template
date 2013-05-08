@@ -267,10 +267,17 @@ define(function (require, exports, module) {
 
     }
 
-    function AMS_Render(AMS_VALUE, AMS_DATA) {
-        return eval(AMS_CreateTpl(AMS_VALUE, AMS_DATA))
+    function AMS_Render(AMS_VALUE, AMS_DATA, AMS_IS_COMPILE) {
+        if (AMS_IS_COMPILE === true) {
+            return eval(AMS_VALUE);
+        } else {
+            return eval(AMS_CreateTpl(AMS_VALUE, AMS_DATA));
+        }
     }
 
-        module.exports = AMS_Render
+
+    exports.render = AMS_Render;
+
+    exports.compile = AMS_CreateTpl;
 
 });

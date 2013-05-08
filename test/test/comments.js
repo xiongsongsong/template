@@ -11,7 +11,7 @@ define(function () {
     describe('注释', function () {
 
         it('#{item}', function () {
-            trim(tpl('\\#{item}', {})).should.to.equal('#{item}')
+            trim(render('\\#{item}', {})).should.to.equal('#{item}')
         });
 
     })
