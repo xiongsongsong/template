@@ -1,0 +1,76 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title></title>
+</head>
+<body>
+<h1>采用eval</h1>
+
+<p></p>
+
+<h1>采用new Function()</h1>
+
+<p></p>
+<script type="text/javascript">
+
+    // 数据量
+    var length = 100;
+    // 渲染次数
+    var number = 10000;
+
+
+    var data = {
+        list: []
+    };
+
+    for (var i = 0; i < length; i++) {
+        data.list.push({
+            index: i,
+            user: '<strong style="color:red">糖饼</strong>',
+            site: 'http://www.planeart.cn',
+            weibo: 'http://weibo.com/planeart',
+            QQweibo: 'http://t.qq.com/tangbin'
+        });
+    }
+
+    var compile = ' var AMS_RENDER = " ";    function echo(s) {        AMS_RENDER += s;    }  ' +
+            '  var list = data["list"];   ' +
+            ' for (var index2494428110000 = 0; index2494428110000 < list.length; index2494428110000++) {' +
+            '     var item = list[index2494428110000];' +
+            '        AMS_RENDER += " <li>";' +
+            '       echo(item.index);' +
+            '        AMS_RENDER += ". 用户: ";        echo(item.user);' +
+            '        AMS_RENDER += "/ 网站：";' +
+            '        echo(item.site);' +
+            '        AMS_RENDER += "</li>";' +
+            '    } AMS_RENDER += ""; ';
+
+
+    var p = document.getElementsByTagName('p');
+
+    //eval
+    (function () {
+        var a = Date.now();
+        for (var i = 0; i < number; i++) {
+            eval(compile);
+        }
+        var b = Date.now();
+        p[0].innerHTML = b - a + 'ms';
+
+    })();
+
+    //new Function
+    (function () {
+        var a = Date.now();
+        var f = new Function(compile + 'return AMS_RENDER;');
+        for (var i = 0; i < number; i++) {
+            f();
+        }
+        var b = Date.now();
+        p[1].innerHTML = b - a + 'ms';
+    })();
+
+
+</script>
+</body>
+</html>
