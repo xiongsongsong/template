@@ -112,7 +112,7 @@ define("xiongsongsong/template/1.1.0/template-debug", [ "./split-debug" ], funct
     var AMS_CLOSE_IF = "AMS_OPERATION";
     var AMS_IF_FLAG = new RegExp("" + "(" + AMS_OPEN_IF[0] + "--(?:.+?)--" + AMS_CLOSE_IF + "|" + AMS_OPEN_IF[1] + "--(?:.+?)--" + AMS_CLOSE_IF + "|" + "AMS_FLAG_EACH(?:\\([^)]+?\\))|" + "AMS_PLACEHOLDER_START" + "--(?:.+?)--" + "AMS_PLACEHOLDER_END|" + "AMS_FLAG_JS(?:.+?)AMS_FLAG_ENDJS|" + "AMS_RUN_START(?:.+?)AMS_RUN_END|" + "AMS_FLAG_ELSE|AMS_FLAG_ENDIF|AMS_FLAG_ENDEACH)", "gm");
     var AMS_forEachRe = /AMS_FLAG_EACH\((.+?)[\s]+in[\s]+([^\s]+)\)/;
-    function AMS_CreateTpl(value, AMS_DATA) {
+    function AMS_CreateTpl(value) {
         var tpl;
         var html = "\r\n//AMS_COMPILED\r\n";
         //开始转换为JS

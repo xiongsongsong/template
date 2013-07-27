@@ -41,7 +41,7 @@ define(function () {
     pre.html('100条数据*10000次\r\n编译模式' + (Date.now() - a) + '毫秒');
 
 
-    var _tpl = compile(tpl, data);
+    var _tpl = compile(tpl);
 
     var c = Date.now();
     for (var j = 0; j < number; j++) {

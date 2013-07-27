@@ -169,7 +169,7 @@ define(function (require, exports, module) {
     var AMS_forEachRe = /AMS_FLAG_EACH\((.+?)[\s]+in[\s]+([^\s]+)\)/;
 
 
-    function AMS_CreateTpl(value, AMS_DATA) {
+    function AMS_CreateTpl(value) {
 
         var tpl;
         var html = '\r\n//AMS_COMPILED\r\n';

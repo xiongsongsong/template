@@ -76,9 +76,9 @@ echo (arr.join('')); // output:arale
 #end
 ```
 
-#### 预编译模板
+#### 预编译
 ```javascript
-var cache = compile(tpl, data);
+var cache = compile(tpl);
 //再render的时候便可以省去编译环节，提升渲染效率
 render(cache, data)
 ```
