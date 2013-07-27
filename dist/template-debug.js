@@ -1,10 +1,12 @@
-define("template/template/1.0.0/template-debug", [ "./split-debug" ], function(require, exports, module) {
+define("xiongsongsong/template/1.1.0/template-debug", [ "./split-debug" ], function(require, exports, module) {
     "use strict";
     var AMS_SPLIT = require("./split-debug").split;
-    //#each中避免索引重名的一个辅助变量，自增
-    var AMS_Index = 0;
-    //注释占位符
-    var AMS_PlaceholderFlag = [ [ /\\#if/gm, /AMS_IF_COMMENT/gm, "#if" ], [ /\\#elseif/gm, /AMS_ELSEIF_COMMENT/gm, "#elseif" ], [ /\\#else/gm, /AMS_ELSE_COMMENT/gm, "#else" ], [ /\\#each/gm, /AMS_EACH_COMMENT/gm, "#each" ], [ /\\#end/gm, /AMS_END_COMMENT/gm, "#end" ], [ /\\#run/gm, /AMS_RUN_COMMENT/gm, "#run" ], [ /\\#js/gm, /AMS_JS_COMMENT/gm, "#js" ], [ /\\#\{/, /AMS_VARIABLE_COMMENT/, "#{" ], [ /\$/gim, /AMS_RE/gm, "$" ], [ /\\\)/gim, /AMS_CLOSE/gm, ")" ] ];
+    //保护注释以免被解析
+    var AMS_PlaceholderFlag = [ [ /\\#if/gm, /AMS_IF_COMMENT/gm, "#if" ], [ /\\#elseif/gm, /AMS_ELSEIF_COMMENT/gm, "#elseif" ], [ /\\#else/gm, /AMS_ELSE_COMMENT/gm, "#else" ], [ /\\#each/gm, /AMS_EACH_COMMENT/gm, "#each" ], [ /\\#end/gm, /AMS_END_COMMENT/gm, "#end" ], [ /\\#run/gm, /AMS_RUN_COMMENT/gm, "#run" ], [ /\\#js/gm, /AMS_JS_COMMENT/gm, "#js" ], [ /\\#\{/, /AMS_VARIABLE_COMMENT/, "#{" ], [ /\\\)/gim, /AMS_CLOSE/gm, ")" ] ];
+    //移除注释
+    function AMS_RemoveNote(tpl) {
+        return tpl.replace(/^\s*##.*$/gim, "");
+    }
     // 首先排除转义字符，以免对模板分析造成干扰
     function AMS_temporaryProtection(tpl) {
         for (var i = 0; i < AMS_PlaceholderFlag.length; i++) {
@@ -30,8 +32,7 @@ define("template/template/1.0.0/template-debug", [ "./split-debug" ], function(r
         str = str.replace(/AMSTEMPBLOCKS==(.*)==/gm, "\\#$1");
         return str;
     }
-    //RegExp object does not support lookbehind
-    //so with the code below
+    //目前ECMAScript规范中暂不支持否定逆向环视，故有了这个啰嗦的方法
     function AMS_TranslateIF(tpl) {
         tpl = AMS_temporaryProtection(tpl);
         var flag = [ "#if", "#each", "#js" ];
@@ -113,19 +114,12 @@ define("template/template/1.0.0/template-debug", [ "./split-debug" ], function(r
     var AMS_forEachRe = /AMS_FLAG_EACH\((.+?)[\s]+in[\s]+([^\s]+)\)/;
     function AMS_CreateTpl(value, AMS_DATA) {
         var tpl;
-        var html = " ";
-        //头文件每次都更新
-        var head = 'var AMS_RENDER=" ";\r\n;function echo(s){AMS_RENDER+=s;}\r\n';
-        for (var k in AMS_DATA) {
-            if (AMS_DATA.hasOwnProperty(k)) {
-                //TODO：使用中括号
-                head += "var " + k + ' = AMS_DATA["' + k + '"];\r\n';
-            }
-        }
+        var html = "\r\n//AMS_COMPLED\r\n";
         //开始转换为JS
         var _tpl;
-        //如果缓存中无值
-        tpl = AMS_TranslateIF(value);
+        //首先移除注释
+        tpl = AMS_RemoveNote(value);
+        tpl = AMS_TranslateIF(tpl);
         tpl = AMS_transportJS(tpl);
         tpl = AMS_TransportOperation(tpl);
         tpl = AMS_transportVar(tpl);
@@ -153,16 +147,14 @@ define("template/template/1.0.0/template-debug", [ "./split-debug" ], function(r
                             var $1 = match[1].split(",");
                             var $2 = match[2];
                             //避免让嵌套的索引变量名重名，导致循环错误
-                            var i = $1.length > 1 ? $1[1] : "index" + parseInt(Math.random() * 1e8, 10) + AMS_Index++;
-                            //避免无休止的增长
-                            if (AMS_Index > 999999999) AMS_Index = 0;
+                            var i = $1.length > 1 ? $1[1] : "index";
                             var arr = $1[2] ? $1[2] : $2;
                             //模拟ES5 中forEach的参数定义
                             return "" + (//如果存在forEach中第3个形参
-                            $1[2] ? "var " + $1[2] + "=" + $2 + ";" : "") + "\r\n" + "for(var " + i + "=0;" + i + "<" + arr + ".length;" + i + "++){\r\n" + "var " + $1[0] + "=" + arr + "[" + i + "];\r\n";
+                            $1[2] ? "var " + $1[2] + "=" + $2 + ";" : "") + "\r\n" + "(function(){for(var " + i + "=0;" + i + "<" + arr + ".length;" + i + "++){\r\n" + "var " + $1[0] + "=" + arr + "[" + i + "];\r\n";
                         });
                     } else if (_str === "AMS_FLAG_ENDEACH") {
-                        html += _str.replace(/AMS_FLAG_ENDEACH/gm, "};");
+                        html += _str.replace(/AMS_FLAG_ENDEACH/gm, "}})();");
                     } else if (/AMS_PLACEHOLDER_START/.test(_str)) {
                         html += _str.replace(/AMS_PLACEHOLDER_START--(.+?)--AMS_PLACEHOLDER_END/, "echo($1);");
                     } else if (/AMS_FLAG_JS/.test(_str)) {
@@ -179,16 +171,26 @@ define("template/template/1.0.0/template-debug", [ "./split-debug" ], function(r
             }
             html += "\r\n";
         }
-        return head + html;
+        return html;
     }
-    function AMS_Render(AMS_VALUE, AMS_DATA) {
-        return eval(AMS_CreateTpl(AMS_VALUE, AMS_DATA));
+    function AMS_Render(AMS_VALUE, AMS_DATA, s) {
+        //每次都更新头
+        //头文件每次都更新
+        var head = 'var AMS_RENDER=" ";\r\n;function echo(s){AMS_RENDER+=s;}\r\n';
+        for (var k in AMS_DATA) {
+            if (AMS_DATA.hasOwnProperty(k)) {
+                head += "var " + k + ' = AMS_DATA["' + k + '"];\r\n';
+            }
+        }
+        //如果存在编译标识，则表明之前已经编译过
+        if (AMS_VALUE.indexOf("//AMS_COMPLED") >= 0) {
+            return eval(head + AMS_VALUE);
+        } else {
+            return eval(head + AMS_CreateTpl(AMS_VALUE, AMS_DATA));
+        }
     }
-    if (module.exports) {
-        module.exports = AMS_Render;
-    } else {
-        typeof window.template == "undefined" ? window.template = AMS_Render : null;
-    }
+    exports.render = AMS_Render;
+    exports.compile = AMS_CreateTpl;
 });
 
 /*!
@@ -221,7 +223,7 @@ define("template/template/1.0.0/template-debug", [ "./split-debug" ], function(r
  * split('..word1 word2..', /([a-z]+)(\d+)/i);
  * // -> ['..', 'word', '1', ' ', 'word', '2', '..']
  */
-define("template/template/1.0.0/split-debug", [], function(require, exports, module) {
+define("xiongsongsong/template/1.1.0/split-debug", [], function(require, exports, module) {
     var split;
     // Avoid running twice; that would break the `nativeSplit` reference
     split = split || function(undef) {

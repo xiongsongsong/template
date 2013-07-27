@@ -8,6 +8,8 @@
 
 ## API
 
+test目录下也有下方的示例
+
 ```javascript
 template('#{name}',{name:'arale'}); //output: arale
 ```
@@ -25,6 +27,17 @@ template('#if(n>1) n>1 #end',{n:2}) //output: n>1
 template('#if(n>1) n>1 #elseif(n<1) n<1 #else #{n} #end',{n:1}); //output: 1
 ```
 
+#### #if中的地雷
+
+如果#if中 反括号有多个的情况，请按下方方式处理
+
+```javascript
+
+#if( 1>(0) ) pass #end //错误，由于做不来词法分析，所以请采用下方方式
+
+#if( 1>(0\) ) pass #end //正确
+
+```
 
 #### #each
 
