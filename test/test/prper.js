@@ -13,7 +13,7 @@ define(function () {
 // 数据量
     var length = 100;
 // 渲染次数
-    var number = 10000;
+    var number = 100;
     var pre = jQuery('#prper');
 
     var data = {
@@ -38,7 +38,7 @@ define(function () {
         render(tpl, data)
     }
 
-    pre.html('100条数据*10000次\r\n编译模式' + (Date.now() - a) + '毫秒');
+    pre.html('100条数据*100次\r\n编译模式' + (Date.now() - a) + '毫秒');
 
 
     var _tpl = compile(tpl);
