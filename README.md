@@ -11,20 +11,20 @@
 test目录下也有下方的示例
 
 ```javascript
-template('#{name}',{name:'arale'}); //output: arale
+render('#{name}',{name:'arale'}); //output: arale
 ```
 
 #### #{placeholder}
 
 ```javascript
-template('#{name}',{name:'arale'}) //output: arale
-template('#{name.substring(0,1)}',{name:'arale'})  //output: a
+render('#{name}',{name:'arale'}) //output: arale
+render('#{name.substring(0,1)}',{name:'arale'})  //output: a
 ```
 
 #### #if
 ```javascript
-template('#if(n>1) n>1 #end',{n:2}) //output: n>1
-template('#if(n>1) n>1 #elseif(n<1) n<1 #else #{n} #end',{n:1}); //output: 1
+render('#if(n>1) n>1 #end',{n:2}) //output: n>1
+render('#if(n>1) n>1 #elseif(n<1) n<1 #else #{n} #end',{n:1}); //output: 1
 ```
 
 #### #if中的地雷
@@ -42,8 +42,8 @@ render('#if(2>(1+0\\) && 1>(0\\))(pass)#end', {n: 2}).should.to.equal('(pass)')
 \#each同ES5中arr.forEach中fn的参数定义，比如:#each(obj,index,arr in [1,2,3,4,5])。
 
 ```javascript
-template('#each(item in arr)#{item}#end',{arr:['a','r','a','l','e']}); //output: arale
-template('#each(n in arr)#if(n%2==0)#{n}#end#end',{arr:[1,2,3,4,5,6]}); //output: 246
+render('#each(item in arr)#{item}#end',{arr:['a','r','a','l','e']}); //output: arale
+render('#each(n in arr)#if(n%2==0)#{n}#end#end',{arr:[1,2,3,4,5,6]}); //output: 246
 
 ```
 
@@ -80,7 +80,7 @@ echo (arr.join('')); // output:arale
 
 地雷：请特别留心模板#each示例中，i、j这两个变量为何要分别设置，因为#each本质使用for实现的。
 
-````html
+```html
 
 <h2>模板中提供的if else</h2>
 
@@ -125,19 +125,27 @@ echo (arr.join('')); // output:arale
 }
 #end
 
+```
 
-````
+#### 预编译
+```javascript
+var cache = compile(tpl, data);
+//
+render(cache, data)
+```
 
-#### 转义
-
->使用反斜杠
->\\#if | \\#each | \\#end ...
 
 
+#### 转义、注释
+
+>转义：\\#if | \\#each | \\#end ...
+>注释：语法为 /^\s*##.*$/gmi
+
+#### 兼容性
 * IE6也兼容
 
 ##历史
 
 ###1.1.0
-* 增加模板注释，语法为 /^\s*##.*$/gmi
+* 增加
 * 完善缓存功能，缓存模式下性能提高约50%
