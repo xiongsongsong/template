@@ -23,6 +23,20 @@ define(function () {
         it('#each配合#if使用', function () {
             trim(render('#each(item,index,_arr in arr)#if(index+1%2==0)#end#if(index%2==0)偶#else奇#end#{index}#end', {arr: ['a', 'b', 'c', 'd']})).should.to.equal('偶0奇1偶2奇3')
         });
+        it('#each嵌套', function () {
+            trim(render('#each(item,i in arr)#{i}#each(item2,i in item)#{i}#end#end', {arr: [
+                [1, 2],
+                [3, 4, 5, 6, 7],
+                [5, 6]
+            ]})).should.to.equal('001101234201')
+        });
+        it('#each嵌套不声明index', function () {
+            trim(render('#each(item in arr)#{index}#each(item2 in item)#{index}#end#end', {arr: [
+                [1, 2],
+                [3, 4, 5, 6, 7],
+                [5, 6]
+            ]})).should.to.equal('001101234201')
+        });
 
     })
 

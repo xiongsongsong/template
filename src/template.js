@@ -4,10 +4,8 @@ define(function (require, exports, module) {
 
     var AMS_SPLIT = require('./split').split;
 
-    //#each中避免索引重名的一个辅助变量，自增
-    var AMS_Index = 0;
 
-    //注释占位符
+    //保护注释以免被解析
     var AMS_PlaceholderFlag = [
         [/\\#if/gm , /AMS_IF_COMMENT/gm , '#if'],
         [/\\#elseif/gm , /AMS_ELSEIF_COMMENT/gm , '#elseif'],
@@ -17,9 +15,13 @@ define(function (require, exports, module) {
         [/\\#run/gm , /AMS_RUN_COMMENT/gm , '#run'],
         [/\\#js/gm , /AMS_JS_COMMENT/gm , '#js'],
         [/\\#\{/, /AMS_VARIABLE_COMMENT/, '#{'],
-        [/\$/gmi, /AMS_RE/gm, '$'],
         [/\\\)/gmi, /AMS_CLOSE/gm, ')']
     ];
+
+    //移除注释
+    function AMS_RemoveNote(tpl) {
+        return tpl.replace(/^\s*##.*$/gmi, '');
+    }
 
 
     // 首先排除转义字符，以免对模板分析造成干扰
@@ -55,8 +57,7 @@ define(function (require, exports, module) {
         return str;
     }
 
-//RegExp object does not support lookbehind
-//so with the code below
+//目前ECMAScript规范中暂不支持否定逆向环视，故有了这个啰嗦的方法
     function AMS_TranslateIF(tpl) {
 
         tpl = AMS_temporaryProtection(tpl);
@@ -171,24 +172,15 @@ define(function (require, exports, module) {
     function AMS_CreateTpl(value, AMS_DATA) {
 
         var tpl;
-        var html = ' ';
-
-        //头文件每次都更新
-        var head = 'var AMS_RENDER=" ";\r\n;function echo(s){AMS_RENDER+=s;}\r\n';
-
-        for (var k in AMS_DATA) {
-            if (AMS_DATA.hasOwnProperty(k)) {
-                //TODO：使用中括号
-                head += 'var ' + k + ' = AMS_DATA["' + k + '"];\r\n'
-            }
-        }
+        var html = '\r\n//AMS_COMPLED\r\n';
 
         //开始转换为JS
         var _tpl;
 
-        //如果缓存中无值
-
-        tpl = AMS_TranslateIF(value);
+        //首先移除注释
+        tpl = AMS_RemoveNote(value);
+        console.log(tpl)
+        tpl = AMS_TranslateIF(tpl);
         tpl = AMS_transportJS(tpl);
         tpl = AMS_TransportOperation(tpl);
         tpl = AMS_transportVar(tpl);
@@ -223,22 +215,19 @@ define(function (require, exports, module) {
                             var $2 = match[2];
 
                             //避免让嵌套的索引变量名重名，导致循环错误
-                            var i = $1.length > 1 ? $1[1] : 'index' + parseInt(Math.random() * 100000000, 10) + AMS_Index++;
-
-                            //避免无休止的增长
-                            if (AMS_Index > 999999999) AMS_Index = 0;
+                            var i = $1.length > 1 ? $1[1] : 'index';
 
                             var arr = $1[2] ? $1[2] : $2;
                             //模拟ES5 中forEach的参数定义
                             return '' +
                                 //如果存在forEach中第3个形参
                                 ($1[2] ? 'var ' + $1[2] + '=' + $2 + ';' : '') + '\r\n' +
-                                'for(var ' + i + '=0;' + i + '<' + arr + '.length;' + i + '++){\r\n' +
+                                '(function(){for(var ' + i + '=0;' + i + '<' + arr + '.length;' + i + '++){\r\n' +
                                 'var ' + $1[0] + '=' + arr + '[' + i + '];\r\n';
 
                         });
                     } else if (_str === 'AMS_FLAG_ENDEACH') {
-                        html += _str.replace(/AMS_FLAG_ENDEACH/gm, '};');
+                        html += _str.replace(/AMS_FLAG_ENDEACH/gm, '}})();');
                     }
                     //匹配占位符
                     else if (/AMS_PLACEHOLDER_START/.test(_str)) {
@@ -263,15 +252,29 @@ define(function (require, exports, module) {
 
         }
 
-        return  head + html
+        return html
 
     }
 
-    function AMS_Render(AMS_VALUE, AMS_DATA, AMS_IS_COMPILE) {
-        if (AMS_IS_COMPILE === true) {
-            return eval(AMS_VALUE);
+    function AMS_Render(AMS_VALUE, AMS_DATA, s) {
+
+        //每次都更新头
+
+        //头文件每次都更新
+        var head = 'var AMS_RENDER=" ";\r\n;function echo(s){AMS_RENDER+=s;}\r\n';
+
+        for (var k in AMS_DATA) {
+            if (AMS_DATA.hasOwnProperty(k)) {
+                head += 'var ' + k + ' = AMS_DATA["' + k + '"];\r\n'
+            }
+        }
+
+
+        //如果存在编译标识，则表明之前已经编译过
+        if (AMS_VALUE.indexOf('//AMS_COMPLED') >= 0) {
+            return eval(head + AMS_VALUE);
         } else {
-            return eval(AMS_CreateTpl(AMS_VALUE, AMS_DATA));
+            return eval(head + AMS_CreateTpl(AMS_VALUE, AMS_DATA));
         }
     }
 

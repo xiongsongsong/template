@@ -117,7 +117,5 @@ echo (arr.join('')); // output:arale
 
 * IE6也兼容
 
-
 ## todo
-* 增加缓存功能
 * 模板注释

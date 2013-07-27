@@ -11,7 +11,7 @@ define(function () {
 
 
 // 数据量
-    var length = 100;
+    var length = 10;
 // 渲染次数
     var number = 10000;
 
@@ -42,14 +42,11 @@ define(function () {
 
     console.log('编译模式' + (b - a) + '毫秒')
 
-
     var _tpl = compile(tpl, data);
-
-    console.log(_tpl)
 
     var c = Date.now();
     for (var j = 0; j < number; j++) {
-        render(_tpl, data, true)
+        render(_tpl, data)
     }
     var d = Date.now();
     console.log('缓存模式' + (d - c) + '毫秒')

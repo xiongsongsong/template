@@ -1,7 +1,7 @@
 {
-    "family": "template",
+    "family": "xiongsongsong",
     "name": "template",
-    "version": "1.0.0",
+    "version": "1.1.0",
     "description": "语法简单且易用的JavaScript模板引擎",
     "homepage": "https://github.com/xiongsongsong/template",
     "repository": {
