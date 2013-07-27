@@ -179,7 +179,6 @@ define(function (require, exports, module) {
 
         //首先移除注释
         tpl = AMS_RemoveNote(value);
-        console.log(tpl)
         tpl = AMS_TranslateIF(tpl);
         tpl = AMS_transportJS(tpl);
         tpl = AMS_TransportOperation(tpl);
