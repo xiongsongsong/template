@@ -21,6 +21,8 @@
     };
 </pre>
 <div id="mocha"></div>
+<h2>性能测试：</h2>
+<pre id="prper"></pre>
 <script>
 
     function trim(str) {
@@ -46,7 +48,7 @@
         require('../test/comments');
 
         setTimeout(function () {
-            //require('../test/prper');
+            require('../test/prper');
         }, 1000)
 
         mocha.run();

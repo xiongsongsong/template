@@ -11,10 +11,10 @@ define(function () {
 
 
 // 数据量
-    var length = 10;
+    var length = 100;
 // 渲染次数
     var number = 10000;
-
+    var pre = jQuery('#prper');
 
     var data = {
         list: []
@@ -38,9 +38,8 @@ define(function () {
         render(tpl, data)
     }
 
-    var b = Date.now();
+    pre.html('100条数据*10000次\r\n编译模式' + (Date.now() - a) + '毫秒');
 
-    console.log('编译模式' + (b - a) + '毫秒')
 
     var _tpl = compile(tpl, data);
 
@@ -48,8 +47,8 @@ define(function () {
     for (var j = 0; j < number; j++) {
         render(_tpl, data)
     }
-    var d = Date.now();
-    console.log('缓存模式' + (d - c) + '毫秒')
+
+    pre.html(pre.html() + '\r\n缓存模式' + (Date.now() - c) + '毫秒');
 
 
 });
