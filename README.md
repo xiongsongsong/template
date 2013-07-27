@@ -76,28 +76,11 @@ echo (arr.join('')); // output:arale
 #end
 ```
 
-#### 预编译
+#### 预编译模板
 ```javascript
 var cache = compile(tpl, data);
+//再render的时候便可以省去编译环节，提升渲染效率
 render(cache, data)
-```
-
-<h2>\#run比较适合变量声明的场景</h2>
-#run echo('系统时间：'+new Date().toLocaleString())
-#run var hello="world";
-
-<h2>\#js可以使用任何JS语法，适合做复杂的模板逻辑</h2>
-#js
-    var rand=Math.random();
-    echo ('随机数：');
-    echo (rand);
-    if(rand>.5){
-        echo('，大于.5')
-    }else{
-        echo('，小于.5')
-}
-#end
-
 ```
 
 ### 一段模板展示
@@ -132,6 +115,24 @@ render(cache, data)
 </dl>
 #end
 
+
+<h2>\#run比较适合变量声明的场景</h2>
+#run echo('系统时间：'+new Date().toLocaleString())
+#run var hello="world";
+
+<h2>\#js可以使用任何JS语法，适合做复杂的模板逻辑</h2>
+#js
+    var rand=Math.random();
+    echo ('随机数：');
+    echo (rand);
+    if(rand>.5){
+        echo('，大于.5')
+    }else{
+        echo('，小于.5')
+}
+#end
+
+```
 
 #### 转义、注释
 
