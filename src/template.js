@@ -172,7 +172,7 @@ define(function (require, exports, module) {
     function AMS_CreateTpl(value, AMS_DATA) {
 
         var tpl;
-        var html = '\r\n//AMS_COMPLED\r\n';
+        var html = '\r\n//AMS_COMPILED\r\n';
 
         //开始转换为JS
         var _tpl;
@@ -270,7 +270,7 @@ define(function (require, exports, module) {
 
 
         //如果存在编译标识，则表明之前已经编译过
-        if (AMS_VALUE.indexOf('//AMS_COMPLED') >= 0) {
+        if (AMS_VALUE.indexOf('//AMS_COMPILED') >= 0) {
             return eval(head + AMS_VALUE);
         } else {
             return eval(head + AMS_CreateTpl(AMS_VALUE, AMS_DATA));
