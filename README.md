@@ -33,9 +33,7 @@ template('#if(n>1) n>1 #elseif(n<1) n<1 #else #{n} #end',{n:1}); //output: 1
 
 ```javascript
 
-#if( 1>(0) ) pass #end //错误，由于做不来词法分析，所以请采用下方方式
-
-#if( 1>(0\) ) pass #end //正确
+render('#if(2>(1+0\\) && 1>(0\\))(pass)#end', {n: 2}).should.to.equal('(pass)')
 
 ```
 
@@ -47,6 +45,14 @@ template('#if(n>1) n>1 #elseif(n<1) n<1 #else #{n} #end',{n:1}); //output: 1
 template('#each(item in arr)#{item}#end',{arr:['a','r','a','l','e']}); //output: arale
 template('#each(n in arr)#if(n%2==0)#{n}#end#end',{arr:[1,2,3,4,5,6]}); //output: 246
 
+```
+
+#### 自定义方法 Helper
+
+```javascript
+render('#{ ubb ( name ) }', {name: "[IMG]a.gif[/IMG]", ubb: function (s) {
+    return s.replace(/(?:\[IMG\])(.*)\[\/IMG\]/, '<img src="$1" />');
+}}).should.to.equal('<img src="a.gif" />');
 ```
 
 #### #run

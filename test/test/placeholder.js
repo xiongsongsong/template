@@ -39,6 +39,12 @@ define(function () {
         it('数组长度', function () {
             trim(render('#{green.like.length}', user)).should.to.equal('3');
         });
+
+        it('自定义函数', function () {
+            trim(render('#{func(name)}', {name: "arale", func: function (s) {
+                return s.split('').join('|');
+            }})).should.to.equal('a|r|a|l|e');
+        });
     })
 
 
