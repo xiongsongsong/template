@@ -9,7 +9,7 @@ define(function () {
     describe('#js', function () {
 
         it('多行JS', function () {
-            trim(tpl('#js\r\n  var a=1235;\r\necho(a);  #end', {name: 123})).should.to.equal('1235')
+            trim(render('#js\r\n  var a=1235;\r\necho(a);  #end', {name: 123})).should.to.equal('1235')
         });
     })
 

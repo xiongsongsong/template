@@ -21,6 +21,8 @@
     };
 </pre>
 <div id="mocha"></div>
+<h2>性能测试：</h2>
+<pre id="prper"></pre>
 <script>
 
     function trim(str) {
@@ -29,7 +31,9 @@
 
     define('runTest', function (require, exports, module) {
 
-        window.tpl = require('../../src/template');
+        window.render = require('../../src/template').render;
+
+        window.compile = require('../../src/template').compile;
 
         require('../test/placeholder');
 
@@ -42,6 +46,10 @@
         require('../test/js');
 
         require('../test/comments');
+
+        setTimeout(function () {
+            require('../test/prper');
+        }, 1000)
 
         mocha.run();
 
