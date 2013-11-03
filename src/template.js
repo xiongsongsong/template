@@ -220,8 +220,9 @@ define(function (require, exports, module) {
                             //模拟ES5 中forEach的参数定义
                             return '' +
                                 //如果存在forEach中第3个形参
+                                '(function(){' +
                                 ($1[2] ? 'var ' + $1[2] + '=' + $2 + ';' : '') + '\r\n' +
-                                '(function(){for(var ' + i + '=0;' + i + '<' + arr + '.length;' + i + '++){\r\n' +
+                                'for(var ' + i + '=0;' + i + '<' + arr + '.length;' + i + '++){\r\n' +
                                 'var ' + $1[0] + '=' + arr + '[' + i + '];\r\n';
 
                         });
