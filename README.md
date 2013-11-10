@@ -47,6 +47,23 @@ render('#each(n in arr)#if(n%2==0)#{n}#end#end',{arr:[1,2,3,4,5,6]}); //output: 
 
 ```
 
+#### 遍历对象
+
+没有语法糖，只有原生 >_<
+
+```html
+<ul>
+    #js
+        var data={ a : 1 , b : 2 }
+        for(var k in data){
+    #end
+        <li><a href="##{k}">#{ k } : #{ data[k] } </li>
+    #js
+        }
+    #end
+</ul>
+```
+
 #### 自定义方法 Helper
 
 ```javascript
