@@ -1,4 +1,4 @@
-define("xiongsongsong/template/1.1.0/template-debug", [ "./split-debug" ], function(require, exports, module) {
+define("xiongsongsong/template/1.1.1/template-debug", [ "./split-debug" ], function(require, exports, module) {
     "use strict";
     var AMS_SPLIT = require("./split-debug").split;
     //保护注释以免被解析
@@ -146,12 +146,11 @@ define("xiongsongsong/template/1.1.0/template-debug", [ "./split-debug" ], funct
                             var match = _str.match(AMS_forEachRe);
                             var $1 = match[1].split(",");
                             var $2 = match[2];
-                            //避免让嵌套的索引变量名重名，导致循环错误
                             var i = $1.length > 1 ? $1[1] : "index";
                             var arr = $1[2] ? $1[2] : $2;
                             //模拟ES5 中forEach的参数定义
-                            return "" + (//如果存在forEach中第3个形参
-                            $1[2] ? "var " + $1[2] + "=" + $2 + ";" : "") + "\r\n" + "(function(){for(var " + i + "=0;" + i + "<" + arr + ".length;" + i + "++){\r\n" + "var " + $1[0] + "=" + arr + "[" + i + "];\r\n";
+                            return "" + //如果存在forEach中第3个形参
+                            "(function(){" + ($1[2] ? "var " + $1[2] + "=" + $2 + ";" : "") + "\r\n" + "for(var " + i + "=0;" + i + "<" + arr + ".length;" + i + "++){\r\n" + "var " + $1[0] + "=" + arr + "[" + i + "];\r\n";
                         });
                     } else if (_str === "AMS_FLAG_ENDEACH") {
                         html += _str.replace(/AMS_FLAG_ENDEACH/gm, "}})();");
@@ -223,7 +222,7 @@ define("xiongsongsong/template/1.1.0/template-debug", [ "./split-debug" ], funct
  * split('..word1 word2..', /([a-z]+)(\d+)/i);
  * // -> ['..', 'word', '1', ' ', 'word', '2', '..']
  */
-define("xiongsongsong/template/1.1.0/split-debug", [], function(require, exports, module) {
+define("xiongsongsong/template/1.1.1/split-debug", [], function(require, exports, module) {
     var split;
     // Avoid running twice; that would break the `nativeSplit` reference
     split = split || function(undef) {

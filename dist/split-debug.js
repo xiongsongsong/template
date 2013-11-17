@@ -28,7 +28,7 @@
  * split('..word1 word2..', /([a-z]+)(\d+)/i);
  * // -> ['..', 'word', '1', ' ', 'word', '2', '..']
  */
-define("xiongsongsong/template/1.1.0/split-debug", [], function(require, exports, module) {
+define("xiongsongsong/template/1.1.1/split-debug", [], function(require, exports, module) {
     var split;
     // Avoid running twice; that would break the `nativeSplit` reference
     split = split || function(undef) {

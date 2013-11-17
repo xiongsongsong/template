@@ -213,7 +213,6 @@ define(function (require, exports, module) {
                             var $1 = match[1].split(',');
                             var $2 = match[2];
 
-                            //避免让嵌套的索引变量名重名，导致循环错误
                             var i = $1.length > 1 ? $1[1] : 'index';
 
                             var arr = $1[2] ? $1[2] : $2;
