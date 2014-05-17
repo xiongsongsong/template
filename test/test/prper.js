@@ -24,9 +24,7 @@ define(function () {
         data.list.push({
             index: i,
             user: '<strong style="color:red">糖饼</strong>',
-            site: 'http://www.planeart.cn',
-            weibo: 'http://weibo.com/planeart',
-            QQweibo: 'http://t.qq.com/tangbin'
+            site: 'http://www.planeart.cn'
         });
     }
 
